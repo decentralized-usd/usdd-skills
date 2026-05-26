@@ -53,3 +53,15 @@ test('USDDClient.getEarnApy fetches /external/earn-apy and attaches meta', async
   assert.equal(data._meta.source, 'openapi.usdd.io');
   assert.match(data._meta.dataTime, /^\d{4}-\d{2}-\d{2}T/);
 });
+
+test('USDDClient.getSusddSupply fetches /external/total-supply/susdd', async () => {
+  const payload = { tron: '1234567', eth: '7654321', bsc: '111111' };
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/external/total-supply/susdd');
+    return { ok: true, status: 200, json: async () => payload };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  const data = await client.getSusddSupply();
+  assert.equal(data.tron, '1234567');
+  assert.equal(data._meta.source, 'openapi.usdd.io');
+});

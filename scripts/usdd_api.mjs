@@ -56,6 +56,11 @@ export class USDDClient {
     return this._withMeta(raw);
   }
 
+  async getSusddSupply() {
+    const raw = await this._fetchWithRetry('/external/total-supply/susdd');
+    return this._withMeta(raw);
+  }
+
   _withMeta(data) {
     return {
       ...data,
