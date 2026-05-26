@@ -8,7 +8,7 @@ Two MCP servers, non-overlapping:
 
 | Server | Package | Role |
 |---|---|---|
-| Official MCP | `@usdd/mcp-server-usdd` (npm) | Wallet, Vault / PSM / Earn reads & writes, protocol metrics, treasury, Smart Allocator |
+| Official MCP | [`@usdd/mcp-server-usdd`](https://github.com/decentralized-usd/mcp-server-usdd) (npm) | Wallet, Vault / PSM / Earn reads & writes, protocol metrics, treasury, Smart Allocator |
 | Analytics MCP (this repo) | `scripts/mcp_server.mjs` | Historical analytics from `openapi.usdd.io` — supply / collateral / per-ilk time series, per-chain APY, raw supply |
 
 Skills route automatically: current-state and write actions go to the official MCP; historical analytics go to the local MCP.

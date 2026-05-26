@@ -2,7 +2,7 @@
 
 This skill enables AI agents to swap supported stablecoins to / from USDD at a fixed rate with no slippage, via the USDD PSM contracts on TRON, ETH, and BSC.
 
-Note: This skill requires the USDD official MCP server (@usdd/mcp-server-usdd) for write operations and all reads. This repo's local MCP is not used by this skill.
+Note: This skill requires the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for write operations and all reads. This repo's local MCP is not used by this skill.
 
 ## Prerequisites
 

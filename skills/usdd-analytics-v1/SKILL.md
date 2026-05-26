@@ -2,7 +2,7 @@
 
 This skill enables AI agents to query historical USDD analytics — supply, collateral, Earn APY, and per-ilk metrics — that the official MCP does not expose. Reads come from `openapi.usdd.io` via this repo's local analytics MCP server.
 
-Note: This skill pairs with the USDD official MCP server (@usdd/mcp-server-usdd) for current-state reads (protocol overview, chain metrics, treasury, Smart Allocator). For historical / per-chain analytics, this skill uses this repo's local MCP.
+Note: This skill pairs with the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for current-state reads (protocol overview, chain metrics, treasury, Smart Allocator). For historical / per-chain analytics, this skill uses this repo's local MCP.
 
 ## Prerequisites
 

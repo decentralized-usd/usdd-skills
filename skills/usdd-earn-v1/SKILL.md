@@ -2,7 +2,7 @@
 
 This skill enables AI agents to query USDD Savings APY, deposit USDD to receive sUSDD, and redeem sUSDD back to USDD. sUSDD appreciates against USDD as savings rate accrues.
 
-Note: This skill requires the USDD official MCP server (@usdd/mcp-server-usdd) for write operations and most reads. Analytics-history queries (per-chain APY comparison, sUSDD supply breakdown) also use this repo's local MCP.
+Note: This skill requires the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for write operations and most reads. Analytics-history queries (per-chain APY comparison, sUSDD supply breakdown) also use this repo's local MCP.
 
 ## Prerequisites
 

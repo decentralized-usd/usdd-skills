@@ -2,7 +2,7 @@
 
 This skill enables AI agents to interact with USDD Vaults (CDPs): open a vault, lock collateral, mint USDD against it, monitor health, repay, withdraw, and close. Vault is the primary mint route for USDD.
 
-Note: This skill requires the USDD official MCP server (@usdd/mcp-server-usdd) for write operations and all reads. This repo's local MCP is used only for per-ilk historical analytics (`get_ilk_collateral_history`).
+Note: This skill requires the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for write operations and all reads. This repo's local MCP is used only for per-ilk historical analytics (`get_ilk_collateral_history`).
 
 ## Prerequisites
 
