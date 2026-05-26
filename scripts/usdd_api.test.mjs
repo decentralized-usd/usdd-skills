@@ -40,3 +40,16 @@ test('USDDClient._fetchWithRetry throws USDDApiError after 3 failures', async ()
     (err) => err instanceof USDDApiError && err.status === 502 && err.endpoint === '/y'
   );
 });
+
+test('USDDClient.getEarnApy fetches /external/earn-apy and attaches meta', async () => {
+  const payload = { tron: 6.5, eth: 5.1, bsc: 4.8 };
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/external/earn-apy');
+    return { ok: true, status: 200, json: async () => payload };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  const data = await client.getEarnApy();
+  assert.equal(data.tron, 6.5);
+  assert.equal(data._meta.source, 'openapi.usdd.io');
+  assert.match(data._meta.dataTime, /^\d{4}-\d{2}-\d{2}T/);
+});

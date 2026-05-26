@@ -51,6 +51,11 @@ export class USDDClient {
     throw lastErr;
   }
 
+  async getEarnApy() {
+    const raw = await this._fetchWithRetry('/external/earn-apy');
+    return this._withMeta(raw);
+  }
+
   _withMeta(data) {
     return {
       ...data,
