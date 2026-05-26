@@ -1,0 +1,31 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "usdd-skills",
+  "description": "AI Agent skills for USDD — vault, PSM, savings, and analytics across TRON, Ethereum, and BSC.",
+  "owner": {
+    "name": "decentralized-usd"
+  },
+  "metadata": {
+    "description": "Skills covering Vault (CDP), PSM stablecoin swaps, USDD Savings (Earn), and protocol analytics history. Pairs with @usdd/mcp-server-usdd for write operations."
+  },
+  "plugins": [
+    {
+      "name": "usdd-skills",
+      "source": "./",
+      "description": "USDD skills — open vaults, mint USDD, swap via PSM, deposit into Earn, query protocol analytics.",
+      "version": "1.0.0",
+      "author": { "name": "decentralized-usd" },
+      "license": "MIT",
+      "keywords": [
+        "usdd", "tron", "ethereum", "bsc", "defi", "stablecoin",
+        "vault", "psm", "savings", "analytics", "skills"
+      ],
+      "category": "web3",
+      "tags": [
+        "skills", "usdd", "stablecoin", "vault", "psm", "savings",
+        "tron", "ethereum", "bsc"
+      ],
+      "strict": false
+    }
+  ]
+}
