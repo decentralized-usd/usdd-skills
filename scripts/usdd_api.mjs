@@ -81,6 +81,12 @@ export class USDDClient {
     return this._withMeta({ value: typeof raw === 'number' ? raw : Number(raw) });
   }
 
+  async getIlkCollateralHistory(ilk) {
+    if (!ilk) throw new TypeError('ilk is required');
+    const raw = await this._fetchWithRetry(`/data-platform/collateral-history?ilk=${encodeURIComponent(ilk)}`);
+    return this._withMeta(raw);
+  }
+
   _withMeta(data) {
     return {
       ...data,

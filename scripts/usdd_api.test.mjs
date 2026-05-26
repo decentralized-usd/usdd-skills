@@ -111,3 +111,20 @@ test('USDDClient.getTotalSupply fetches /totalSupply as number', async () => {
   assert.equal(data.value, 725000000);
   assert.equal(data._meta.source, 'openapi.usdd.io');
 });
+
+test('USDDClient.getIlkCollateralHistory hits /data-platform/collateral-history with ilk param', async () => {
+  const payload = { ilk: 'TRX-A', points: [{ date: '2026-05-20', ratio: 3.2 }] };
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/data-platform/collateral-history?ilk=TRX-A');
+    return { ok: true, status: 200, json: async () => payload };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  const data = await client.getIlkCollateralHistory('TRX-A');
+  assert.equal(data.ilk, 'TRX-A');
+  assert.equal(data._meta.source, 'openapi.usdd.io');
+});
+
+test('USDDClient.getIlkCollateralHistory throws on missing ilk', async () => {
+  const client = new USDDClient({ fetchImpl: async () => { throw new Error('should not be called'); } });
+  await assert.rejects(() => client.getIlkCollateralHistory(), /ilk is required/);
+});
