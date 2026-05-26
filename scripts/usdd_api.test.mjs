@@ -65,3 +65,15 @@ test('USDDClient.getSusddSupply fetches /external/total-supply/susdd', async () 
   assert.equal(data.tron, '1234567');
   assert.equal(data._meta.source, 'openapi.usdd.io');
 });
+
+test('USDDClient.getSupplyHistory fetches supply-value-history', async () => {
+  const payload = { points: [{ date: '2026-05-20', tron: 100, eth: 50, bsc: 20 }] };
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/data-platform/overview/supply-value-history');
+    return { ok: true, status: 200, json: async () => payload };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  const data = await client.getSupplyHistory();
+  assert.equal(data.points.length, 1);
+  assert.equal(data._meta.source, 'openapi.usdd.io');
+});

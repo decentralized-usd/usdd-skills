@@ -61,6 +61,11 @@ export class USDDClient {
     return this._withMeta(raw);
   }
 
+  async getSupplyHistory() {
+    const raw = await this._fetchWithRetry('/data-platform/overview/supply-value-history');
+    return this._withMeta(raw);
+  }
+
   _withMeta(data) {
     return {
       ...data,
