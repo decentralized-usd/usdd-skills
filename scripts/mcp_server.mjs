@@ -91,7 +91,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  // --list-tools 模式在 Task 15 实现
+  if (process.argv.includes('--list-tools')) {
+    console.log(JSON.stringify(TOOLS.map(t => ({ name: t.name, description: t.description })), null, 2));
+    return;
+  }
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("USDD analytics MCP server running on stdio.");
