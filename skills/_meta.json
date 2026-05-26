@@ -1,15 +1,38 @@
 {
-  "name": "usdd-skills",
-  "description": "AI Agent skills for USDD — vault, PSM, savings, analytics. Pairs with @usdd/mcp-server-usdd for writes.",
-  "version": "0.1.0",
-  "skills": [
-    "./usdd-analytics-v1/",
-    "./usdd-earn-v1/",
-    "./usdd-psm-v1/",
-    "./usdd-vault-v1/"
-  ],
+  "owner": "decentralized-usd",
+  "slug": "usdd-skills",
+  "displayName": "USDD DAO Skills",
+  "latest": {
+    "version": "1.0.0",
+    "publishedAt": 1779766819510,
+    "commit": "400ad98db63be611c6ebc46b2242aa99c5a66847"
+  },
+  "history": [],
   "keywords": [
-    "usdd", "tron", "ethereum", "bsc", "defi", "stablecoin",
-    "vault", "psm", "savings", "analytics"
+    "tron", "ethereum", "bsc", "usdd", "stablecoin", "vault",
+    "psm", "savings", "analytics", "defi", "mcp", "ai-agent"
+  ],
+  "description": "AI Agent skills for USDD — open vaults, swap on PSM, deposit into Earn, and query protocol analytics across TRON, Ethereum, and BSC. Pairs with @usdd/mcp-server-usdd for write operations.",
+  "skills": [
+    {
+      "id": "usdd-vault-v1",
+      "name": "USDD Vault (CDP)",
+      "description": "Open vaults, lock collateral, mint USDD, repay debt, withdraw collateral, close — with risk-summary precheck"
+    },
+    {
+      "id": "usdd-psm-v1",
+      "name": "USDD PSM",
+      "description": "Swap stablecoins ↔ USDD via the Peg Stability Module at fixed rate, no slippage"
+    },
+    {
+      "id": "usdd-earn-v1",
+      "name": "USDD Earn (Savings)",
+      "description": "Deposit USDD to receive sUSDD, redeem back at current exchange rate"
+    },
+    {
+      "id": "usdd-analytics-v1",
+      "name": "USDD Analytics",
+      "description": "Historical analytics: supply, collateral, Earn APY, per-ilk metrics from openapi.usdd.io"
+    }
   ]
 }
