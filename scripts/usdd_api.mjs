@@ -99,3 +99,52 @@ export class USDDClient {
 }
 
 export default USDDClient;
+
+async function main() {
+  const [command, ...args] = process.argv.slice(2);
+  const client = new USDDClient();
+
+  try {
+    switch (command) {
+      case 'earn-apy':
+        console.log(JSON.stringify(await client.getEarnApy(), null, 2));
+        break;
+      case 'susdd-supply':
+        console.log(JSON.stringify(await client.getSusddSupply(), null, 2));
+        break;
+      case 'supply-history':
+        console.log(JSON.stringify(await client.getSupplyHistory(), null, 2));
+        break;
+      case 'collateral-history':
+        console.log(JSON.stringify(await client.getCollateralHistory(), null, 2));
+        break;
+      case 'circulating-supply':
+        console.log(JSON.stringify(await client.getCirculatingSupply(), null, 2));
+        break;
+      case 'total-supply':
+        console.log(JSON.stringify(await client.getTotalSupply(), null, 2));
+        break;
+      case 'ilk-collateral-history':
+        if (!args[0]) { console.error('Usage: ilk-collateral-history <ilk>'); process.exit(2); }
+        console.log(JSON.stringify(await client.getIlkCollateralHistory(args[0]), null, 2));
+        break;
+      default:
+        console.log('Available commands:');
+        console.log('  earn-apy                       Per-chain Earn APY');
+        console.log('  susdd-supply                   sUSDD supply per chain');
+        console.log('  supply-history                 USDD/sUSDD supply time series');
+        console.log('  collateral-history             Protocol-wide collateral time series');
+        console.log('  circulating-supply             Raw circulating supply');
+        console.log('  total-supply                   Raw total supply');
+        console.log('  ilk-collateral-history <ilk>   Per-ilk collateral series');
+        process.exit(command ? 1 : 0);
+    }
+  } catch (error) {
+    console.error('Execution Error:', error.message);
+    process.exit(1);
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}
