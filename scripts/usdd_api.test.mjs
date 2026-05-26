@@ -89,3 +89,14 @@ test('USDDClient.getCollateralHistory fetches collateral-value-history', async (
   assert.equal(data.points.length, 1);
   assert.equal(data._meta.source, 'openapi.usdd.io');
 });
+
+test('USDDClient.getCirculatingSupply fetches /circulatingSupply as number', async () => {
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/circulatingSupply');
+    return { ok: true, status: 200, json: async () => 720000000.5 };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  const data = await client.getCirculatingSupply();
+  assert.equal(data.value, 720000000.5);
+  assert.equal(data._meta.source, 'openapi.usdd.io');
+});
