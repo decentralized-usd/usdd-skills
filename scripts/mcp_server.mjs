@@ -61,6 +61,35 @@ const TOOLS = [
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
 
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args = {} } = request.params;
+  try {
+    switch (name) {
+      case "get_earn_apy":
+        return { content: [{ type: "text", text: JSON.stringify(await client.getEarnApy(), null, 2) }] };
+      case "get_susdd_supply":
+        return { content: [{ type: "text", text: JSON.stringify(await client.getSusddSupply(), null, 2) }] };
+      case "get_supply_history":
+        return { content: [{ type: "text", text: JSON.stringify(await client.getSupplyHistory(), null, 2) }] };
+      case "get_collateral_history":
+        return { content: [{ type: "text", text: JSON.stringify(await client.getCollateralHistory(), null, 2) }] };
+      case "get_circulating_supply":
+        return { content: [{ type: "text", text: JSON.stringify(await client.getCirculatingSupply(), null, 2) }] };
+      case "get_total_supply":
+        return { content: [{ type: "text", text: JSON.stringify(await client.getTotalSupply(), null, 2) }] };
+      case "get_ilk_collateral_history":
+        return { content: [{ type: "text", text: JSON.stringify(await client.getIlkCollateralHistory(args.ilk), null, 2) }] };
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
+  } catch (error) {
+    return {
+      content: [{ type: "text", text: `Error: ${error.message}` }],
+      isError: true,
+    };
+  }
+});
+
 async function main() {
   // --list-tools 模式在 Task 15 实现
   const transport = new StdioServerTransport();
