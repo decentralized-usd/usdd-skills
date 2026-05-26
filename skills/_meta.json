@@ -1,0 +1,15 @@
+{
+  "name": "usdd-skills",
+  "description": "AI Agent skills for USDD — vault, PSM, savings, analytics. Pairs with @usdd/mcp-server-usdd for writes.",
+  "version": "0.1.0",
+  "skills": [
+    "./usdd-analytics-v1/",
+    "./usdd-earn-v1/",
+    "./usdd-psm-v1/",
+    "./usdd-vault-v1/"
+  ],
+  "keywords": [
+    "usdd", "tron", "ethereum", "bsc", "defi", "stablecoin",
+    "vault", "psm", "savings", "analytics"
+  ]
+}
