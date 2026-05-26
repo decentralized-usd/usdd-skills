@@ -100,3 +100,14 @@ test('USDDClient.getCirculatingSupply fetches /circulatingSupply as number', asy
   assert.equal(data.value, 720000000.5);
   assert.equal(data._meta.source, 'openapi.usdd.io');
 });
+
+test('USDDClient.getTotalSupply fetches /totalSupply as number', async () => {
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/totalSupply');
+    return { ok: true, status: 200, json: async () => 725000000 };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  const data = await client.getTotalSupply();
+  assert.equal(data.value, 725000000);
+  assert.equal(data._meta.source, 'openapi.usdd.io');
+});

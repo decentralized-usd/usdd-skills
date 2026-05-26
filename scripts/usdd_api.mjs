@@ -76,6 +76,11 @@ export class USDDClient {
     return this._withMeta({ value: typeof raw === 'number' ? raw : Number(raw) });
   }
 
+  async getTotalSupply() {
+    const raw = await this._fetchWithRetry('/totalSupply');
+    return this._withMeta({ value: typeof raw === 'number' ? raw : Number(raw) });
+  }
+
   _withMeta(data) {
     return {
       ...data,
