@@ -66,6 +66,11 @@ export class USDDClient {
     return this._withMeta(raw);
   }
 
+  async getCollateralHistory() {
+    const raw = await this._fetchWithRetry('/data-platform/overview/collateral-value-history');
+    return this._withMeta(raw);
+  }
+
   _withMeta(data) {
     return {
       ...data,

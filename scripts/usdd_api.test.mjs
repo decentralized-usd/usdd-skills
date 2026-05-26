@@ -77,3 +77,15 @@ test('USDDClient.getSupplyHistory fetches supply-value-history', async () => {
   assert.equal(data.points.length, 1);
   assert.equal(data._meta.source, 'openapi.usdd.io');
 });
+
+test('USDDClient.getCollateralHistory fetches collateral-value-history', async () => {
+  const payload = { points: [{ date: '2026-05-20', total: 1.2e9 }] };
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/data-platform/overview/collateral-value-history');
+    return { ok: true, status: 200, json: async () => payload };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  const data = await client.getCollateralHistory();
+  assert.equal(data.points.length, 1);
+  assert.equal(data._meta.source, 'openapi.usdd.io');
+});
