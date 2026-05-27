@@ -59,7 +59,7 @@ ls ~/.agents/skills/usdd-skills
 # Should list: usdd-vault-v1/ usdd-psm-v1/ usdd-earn-v1/ usdd-analytics-v1/
 
 node ~/.codex/usdd-skills/scripts/mcp_server.mjs --list-tools
-# Should print 7 analytics-history tools
+# Should print 4 analytics tools
 ```
 
 ## Available Skills
