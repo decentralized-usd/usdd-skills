@@ -60,4 +60,4 @@ and shows it in the chat-confirmation message. The user verifies this number, no
 
 - Vault product page: <https://usdd.io/vault>
 - Live ilk parameters: official MCP `get_supported_ilks`
-- Per-ilk historical analytics: this repo's `get_ilk_collateral_history`
+- Per-ilk historical analytics are not currently exposed by the backend service or MCP.

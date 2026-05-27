@@ -1,24 +1,31 @@
-# openapi.usdd.io API Reference
+# Analytics MCP Upstream Reference
 
-This repo's analytics MCP and CLI wrap a curated subset of `openapi.usdd.io` — specifically the **historical analytics** endpoints that the official MCP server (`@usdd/mcp-server-usdd`) does not expose.
+This repo's analytics MCP wraps a curated subset of upstream analytics data that the skills intentionally expose locally.
 
-For current-state reads (protocol overview, chain metrics, treasury, Smart Allocator), use the official MCP — do not duplicate.
+Agent workflows must call this repo's MCP tools. The upstream URL details below are implementation/maintenance notes for the MCP server, not instructions for agents to fetch APIs directly.
 
-## Endpoints used by this repo
+For broader current-state reads (protocol overview, chain metrics, treasury, Smart Allocator), use the official MCP — do not duplicate those tool surfaces here.
 
-| Endpoint | This repo's MCP tool | CLI subcommand | Notes |
-|---|---|---|---|
-| `GET /external/earn-apy` | `get_earn_apy` | `earn-apy` | Per-chain Earn APY |
-| `GET /external/total-supply/susdd` | `get_susdd_supply` | `susdd-supply` | sUSDD supply per chain |
-| `GET /data-platform/overview/supply-value-history` | `get_supply_history` | `supply-history` | USDD/sUSDD supply time series per chain |
-| `GET /data-platform/overview/collateral-value-history` | `get_collateral_history` | `collateral-history` | Protocol collateral value time series per chain |
-| `GET /circulatingSupply` | `get_circulating_supply` | `circulating-supply` | Plain number response |
-| `GET /totalSupply` | `get_total_supply` | `total-supply` | Plain number response |
-| `GET /data-platform/collateral-history?ilk=<ilk>` | `get_ilk_collateral_history` | `ilk-collateral-history <ilk>` | Per-ilk historical ratio / debt / APY |
+## Internal upstream mappings
+
+| Internal upstream path | This repo's MCP tool | Notes |
+|---|---|---|
+| `GET /api/v1/external/earn-apy` | `get_earn_apy` | Per-chain Earn APY |
+| `GET /api/v1/external/total-supply/susdd` | `get_susdd_supply` | sUSDD supply per chain |
+| `GET /data-platform/overview/supply-value-history` | `get_supply_history` | USDD/sUSDD supply time series per chain |
+| `GET /totalSupply` | `get_total_supply` | Plain number response |
+
+## Not available
+
+The backend service and MCP do not expose these tool names. Do not document them as available and do not route skills or tests to them:
+
+- `get_collateral_history`
+- `get_circulating_supply`
+- `get_ilk_collateral_history`
 
 ## Response envelope (added by this repo)
 
-Every response from this repo's MCP / CLI is the raw API JSON merged with a `_meta` block:
+Every response from this repo's MCP is the raw upstream JSON merged with a `_meta` block:
 
 ```json
 {
@@ -34,7 +41,7 @@ Every response from this repo's MCP / CLI is the raw API JSON merged with a `_me
 
 ## Auth
 
-`openapi.usdd.io` is public and keyless. No API key needed for any endpoint above.
+No API key is needed for the upstream analytics data currently used by the MCP.
 
 ## Endpoints intentionally NOT wrapped here
 

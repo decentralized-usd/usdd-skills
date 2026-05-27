@@ -32,7 +32,7 @@ sUSDD has a monotonically increasing exchange rate against USDD. The savings rat
 
 ## Cross-chain comparison
 
-Use `get_earn_apy` (this repo's MCP, `openapi.usdd.io /external/earn-apy`) to see APY on all three chains at once. Pick the chain with the highest rate **and** lowest gas cost for your deposit size.
+Use `get_earn_apy` (this repo's MCP, `openapi.usdd.io /api/v1/external/earn-apy`) to see APY on all three chains at once. Pick the chain with the highest rate **and** lowest gas cost for your deposit size.
 
 ## Risks
 
