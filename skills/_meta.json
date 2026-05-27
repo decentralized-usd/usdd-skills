@@ -32,7 +32,7 @@
     {
       "id": "usdd-analytics-v1",
       "name": "USDD Analytics",
-      "description": "Historical analytics: supply, collateral, Earn APY, per-ilk metrics from openapi.usdd.io"
+      "description": "Supported analytics: Earn APY, sUSDD supply, total supply, and supply history via the local analytics MCP"
     }
   ]
 }

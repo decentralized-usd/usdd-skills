@@ -4,14 +4,14 @@
 ![Networks: TRON · ETH · BSC](https://img.shields.io/badge/Networks-TRON_·_ETH_·_BSC-red)
 ![MCP](https://img.shields.io/badge/MCP-Compatible-blue)
 
-AI Agent skills for the [USDD](https://usdd.io) stablecoin protocol. Provides structured instructions and a local analytics MCP server that enables AI agents (Claude Code, Claude Desktop, Cursor, Codex, OpenCode) to query supply / collateral / APY history, and — via the official `@usdd/mcp-server-usdd` package — open vaults, swap on PSM, and deposit into Earn.
+AI Agent skills for the [USDD](https://usdd.io) stablecoin protocol. Provides structured instructions and a local analytics MCP server that enables AI agents (Claude Code, Claude Desktop, Cursor, Codex, OpenCode) to query supported supply and APY analytics, and — via the official `@usdd/mcp-server-usdd` package — open vaults, swap on PSM, and deposit into Earn.
 
 ## Features
 
 - **Vault (CDP)** — open, deposit, mint, repay, withdraw, close — with built-in risk-summary precheck and projected-ratio chat confirmation.
 - **PSM** — swap stablecoins ↔ USDD at fixed rate, no slippage, explicit fees in chat confirmation.
 - **Earn (Savings)** — deposit USDD to receive sUSDD; redeem back at the current rate.
-- **Analytics** — historical APY, supply, collateral, per-ilk metrics from `openapi.usdd.io`.
+- **Analytics** — Earn APY, sUSDD supply, USDD total supply, and supported supply history through this repo's analytics MCP.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ Two MCP servers, non-overlapping:
 
 | Server | Source | Role |
 |---|---|---|
-| Analytics MCP (this repo) | `scripts/mcp_server.mjs` | 7 historical-analytics tools from `openapi.usdd.io` |
+| Analytics MCP (this repo) | `scripts/mcp_server.mjs` | 4 read-only analytics MCP tools backed by supported upstream analytics data |
 | Official MCP | npm `@usdd/mcp-server-usdd` | Wallet, Vault/PSM/Earn reads & writes, protocol metrics, treasury, Smart Allocator |
 
 Skills route automatically. Write operations always go through the official MCP.
@@ -50,7 +50,7 @@ npm install -g @usdd/mcp-server-usdd
 
 **Analytics MCP smoke:**
 ```bash
-npm run mcp:list-tools         # List the 7 analytics tools
+npm run mcp:list-tools         # List the 4 analytics tools
 node scripts/usdd_api.mjs      # CLI usage
 ```
 
@@ -90,7 +90,12 @@ Add to `.cursor/mcp.json` — same structure as above.
 
 ### Claude Code
 
-Add to `.claude/settings.local.json` — same structure as above.
+Register project-scoped MCP servers:
+
+```bash
+claude mcp add -s project usdd-analytics -- node /ABS_PATH/usdd-skills/scripts/mcp_server.mjs
+claude mcp add -s project usdd-full -- mcp-server-usdd
+```
 
 ### OpenCode / Codex CLI
 
@@ -103,10 +108,9 @@ See `.codex/INSTALL.md`.
 | `get_earn_apy` | USDD Savings APY per chain |
 | `get_susdd_supply` | sUSDD supply per chain |
 | `get_supply_history` | Time series of USDD and sUSDD supply per chain |
-| `get_collateral_history` | Time series of protocol-wide collateral value per chain |
-| `get_circulating_supply` | Raw circulating supply |
 | `get_total_supply` | Raw total supply |
-| `get_ilk_collateral_history` | Per-ilk historical ratio / debt / APY |
+
+`get_collateral_history`, `get_circulating_supply`, and `get_ilk_collateral_history` are not exposed by the backend service or MCP. Do not route agent workflows to those tool names.
 
 For Vault / PSM / Earn / balance / allowance / protocol-overview / treasury / Smart Allocator tools, see the official MCP: <https://github.com/decentralized-usd/mcp-server-usdd>.
 
@@ -121,8 +125,8 @@ For Vault / PSM / Earn / balance / allowance / protocol-overview / treasury / Sm
 - **"What's my vault #42 health?"**
   → official MCP `analyze_vault_risk` → 3-line risk summary (ratio / liquidation price / tier)
 
-- **"Compare TRX-A vs stETH-A collateral ratios over the last 30 days."**
-  → analytics MCP `get_ilk_collateral_history` (called twice, then compared)
+- **"What's the protocol supply right now?"**
+  → official MCP `get_protocol_metrics`, or analytics MCP `get_total_supply` when a raw total-supply number is sufficient
 
 ## Security
 

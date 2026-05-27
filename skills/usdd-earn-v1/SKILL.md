@@ -1,66 +1,99 @@
 # USDD Earn (Savings) — AI Agent Skill
 
-This skill enables AI agents to query USDD Savings APY, deposit USDD to receive sUSDD, and redeem sUSDD back to USDD. sUSDD appreciates against USDD as savings rate accrues.
+This skill enables AI agents to inspect USDD Savings, compare APY/sUSDD supply analytics, deposit USDD to receive sUSDD, and withdraw USDD from sUSDD through the official `@usdd/mcp-server-usdd` MCP server.
 
-Note: This skill requires the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for write operations and most reads. Analytics-history queries (per-chain APY comparison, sUSDD supply breakdown) also use this repo's local MCP.
+Use the official MCP for current savings status and all writes. Use this repo's local analytics MCP for cross-chain APY and sUSDD supply analytics.
 
 ## Prerequisites
 
 - Node.js v20+
 - Official MCP installed: `npm install -g @usdd/mcp-server-usdd`
-- This repo's MCP server installed for analytics history
+- This repo's MCP server registered for analytics tools
+
+## Network Scope
+
+Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc_testnet`, but Savings is only usable where `get_savings_status({ network })` returns `supported: true`.
+
+Before any Earn write, call `get_savings_status({ network })`. If it returns `supported: false`, refuse the write and quote the returned message. Do not assume TRON Savings exists just because USDD exists on TRON.
 
 ## Available Tools
 
-| Tool | Inputs | Description | Write? | Requires Approval |
-|------|--------|-------------|--------|--------------------|
-| `get_savings_status` (official MCP) | `chain` | Current savings rate, sUSDD exchange rate, total supply on a given chain | No | — |
-| `get_token_balance` (official MCP) | `address`, `token`, `chain` | USDD / sUSDD balance | No | — |
-| `check_allowance` (official MCP) | `address`, `spender`, `token`, `chain` | Earn-contract allowance for USDD | No | — |
-| `approve_token` (official MCP) | `token`, `spender`, `amount`, `chain` | Approve USDD spending for the Earn contract | Yes | (this IS the approval) |
-| `get_earn_apy` (this repo MCP) | — | Per-chain APY for cross-chain comparison | No | — |
-| `get_susdd_supply` (this repo MCP) | — | sUSDD supply broken down by chain | No | — |
-| `deposit_savings` (official MCP) | `amount`, `chain`, `from` | Deposit USDD, receive sUSDD | Yes | USDD |
-| `withdraw_savings` (official MCP) | `amount`, `chain`, `from` | Redeem sUSDD back to USDD | Yes | None |
+| Tool | Inputs | Description | Write? |
+|------|--------|-------------|--------|
+| `get_savings_status` (official) | `network?` | Savings support, contract addresses, rate metrics, wallet shares | No |
+| `get_protocol_overview` (official) | `network?` | USDD token address and protocol addresses | No |
+| `get_wallet_address` (official) | `network?` | Active MCP wallet address | No |
+| `get_native_balance` (official) | `owner?`, `network?` | Gas-token balance | No |
+| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network?` | USDD / sUSDD balance | No |
+| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network?` | USDD allowance for sUSDD contract | No |
+| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network?` | Approve USDD for the sUSDD contract | Yes |
+| `deposit_savings` (official) | `amount`, `network?` | Deposit USDD and mint sUSDD shares | Yes |
+| `withdraw_savings` (official) | `amount`, `network?` | Withdraw USDD amount from sUSDD | Yes |
+| `get_earn_apy` (local MCP) | — | Per-chain APY analytics via this repo's analytics MCP | No |
+| `get_susdd_supply` (local MCP) | — | sUSDD supply breakdown via this repo's analytics MCP | No |
 
-## Approval Matrix
+Official write tools use the active MCP wallet. They do not accept `from`; call `get_wallet_address({ network })` before confirmation.
 
-| Tool | Requires approval? | Token | Why |
-|---|---|---|---|
-| `deposit_savings` | Yes | USDD | Earn contract pulls USDD from the user's wallet |
-| `withdraw_savings` | No | — | Burns sUSDD, returns USDD to user (no inbound pull) |
+## Approval Rules
+
+| Operation | Token approval needed? | Notes |
+|---|---|---|
+| `deposit_savings` | Yes, USDD -> sUSDD contract | Use USDD address from `get_protocol_overview` and sUSDD address from `get_savings_status().savings.susdd`. |
+| `withdraw_savings` | No allowance | The user spends/burns sUSDD shares via the sUSDD contract. Still requires chat confirmation because it is a write. |
 
 ## Workflow Rules
 
-### Chain selection (mandatory)
-Earn is deployed on TRON, ETH, and BSC. If the user does not specify a chain, ask explicitly. **Never default silently to TRON.**
+### Analytics Queries
 
-### Write precheck (6 steps — non-skippable)
+- "Which chain has the highest APY?" -> call local `get_earn_apy`.
+- "How much sUSDD exists by chain?" -> call local `get_susdd_supply`.
+- Append `Data time: <ISO8601> · Source: <source from _meta>` for local analytics output.
 
-Before invoking any `Write? = Yes` tool, run these steps **in order**:
+For current per-network wallet shares, sUSDD contract status, or current DSR fields, call official `get_savings_status({ network })`.
 
-1. **Check chain** — confirm user specified the chain; verify the Earn contract is deployed on that chain.
-2. **Check balance** — call official MCP `get_token_balance` for the input token; the amount must cover both the deposit and a gas reserve. If insufficient, abort and report the gap.
-3. **Check allowance** — call official MCP `check_allowance` for the Earn contract on the chosen chain. If allowance ≥ deposit amount, skip to step 5.
-4. **Approve if needed** — call official MCP `approve_token` to set allowance. Wait for on-chain confirmation. Abort if the user cancels or the approval reverts.
-5. **Chat confirmation (non-skippable)** — restate in the conversation: `amount / fee estimate / chain / Earn contract / from-address`. Wait for the user to type an affirmative confirmation. Abort if the user says no or amends parameters.
-6. **Execute** — call the official MCP write tool (`deposit_savings` or `withdraw_savings`). Return the receipt summary.
+### Deposit Precheck
 
-> The official MCP does NOT expose `prepare_*/confirm_*` for Earn writes — they are single-call. Step 5's chat confirmation is the contract-level safety check and is mandatory regardless of what the underlying MCP exposes.
+Before `deposit_savings`:
 
-### Data freshness footer
-For analytics tools (`get_earn_apy`, `get_susdd_supply`) append:
-`Data time: <ISO8601> · Source: openapi.usdd.io`
+1. Resolve `network`; ask if missing.
+2. Call `get_savings_status({ network })`; stop if `supported: false`.
+3. Call `get_protocol_overview({ network })` to get the USDD token address.
+4. Call `get_wallet_address({ network })`.
+5. Call `get_native_balance({ network })` for gas.
+6. Call `get_token_balance({ token: usdd, network })`.
+7. Call `check_allowance({ token: usdd, spender: savings.susdd, amount, decimals: 18, network })`.
+8. If allowance is insufficient, call `approve_token({ token: usdd, spender: savings.susdd, amount, decimals: 18, network })`.
+9. Chat confirmation: restate deposit amount, `network`, active wallet, sUSDD contract, USDD token, current rate/status fields, and any fee/gas estimate if available.
+10. Wait for an affirmative user response.
+11. Call `deposit_savings({ amount, network })`.
+12. Verify with `get_savings_status({ network })` and balance checks if needed.
+
+### Withdraw Precheck
+
+Before `withdraw_savings`:
+
+1. Resolve `network`; ask if missing.
+2. Call `get_savings_status({ network })`; stop if `supported: false`.
+3. Call `get_wallet_address({ network })`.
+4. Call `get_native_balance({ network })` for gas.
+5. Call `get_token_balance({ token: savings.susdd, decimals: 18, network })`.
+6. Confirm the requested USDD withdrawal amount is plausible against wallet shares and status output.
+7. Chat confirmation: restate withdrawal amount, `network`, active wallet, sUSDD contract, and expected USDD receipt if calculable.
+8. Wait for an affirmative user response.
+9. Call `withdraw_savings({ amount, network })`.
+10. Verify with `get_savings_status({ network })` and balance checks if needed.
 
 ## Example Prompts
 
-- "Which chain has the highest Earn APY today?" → `get_earn_apy`
-- "How much sUSDD is there on ETH vs TRON?" → `get_susdd_supply`
-- "What is the current Earn APY on Ethereum?" → official `get_savings_status` with chain=eth
-- "Deposit 1000 USDD on Ethereum into Earn." → full 6-step precheck, then `deposit_savings`
-- "Withdraw all my sUSDD on TRON." → 6-step precheck (skipping the approve step since withdrawal needs no approval), then `withdraw_savings`
+- "Which chain has the highest Earn APY today?" -> local `get_earn_apy`
+- "How much sUSDD is there on ETH vs BSC?" -> local `get_susdd_supply`
+- "What is my current Savings position on Ethereum?" -> official `get_savings_status({ network: "eth" })`
+- "Deposit 1000 USDD on Ethereum into Earn." -> full deposit precheck, then `deposit_savings`
+- "Withdraw 500 USDD from sUSDD on BSC." -> full withdraw precheck, then `withdraw_savings`
 
 ## Security
 
-- All writes pass through `@usdd/mcp-server-usdd`. This skill never holds private keys.
-- Chat confirmation in step 5 is non-skippable. Skipping it is a skill-contract violation.
+- Never write before `get_savings_status({ network })` returns `supported: true`.
+- Never default to `tron` when the user omitted network.
+- Deposit approval is only for USDD to the sUSDD contract returned by official MCP output.
+- All writes pass through `@usdd/mcp-server-usdd`; this skill never holds private keys.

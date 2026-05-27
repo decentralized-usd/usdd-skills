@@ -1,47 +1,90 @@
 # USDD Analytics — AI Agent Skill
 
-This skill enables AI agents to query historical USDD analytics — supply, collateral, Earn APY, and per-ilk metrics — that the official MCP does not expose. Reads come from `openapi.usdd.io` via this repo's local analytics MCP server.
+This read-only skill routes USDD analytics questions between:
 
-Note: This skill pairs with the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for current-state reads (protocol overview, chain metrics, treasury, Smart Allocator). For historical / per-chain analytics, this skill uses this repo's local MCP.
+- this repo's local analytics MCP for supported APY/supply analytics tools, and
+- the official `@usdd/mcp-server-usdd` MCP for current-state protocol metrics, treasury, and Smart Allocator data.
+
+No transaction signing is used by this skill.
 
 ## Prerequisites
 
 - Node.js v20+
-- This repo's MCP server installed and registered in the AI client (see README)
+- This repo's analytics MCP registered in the AI client
+- Official MCP registered when the question is about current-state metrics, treasury, or Smart Allocator
 
-## Available Tools
+## Local Analytics MCP Tools
 
-| Tool | Inputs | Description | Write? |
-|------|--------|-------------|--------|
-| `get_earn_apy` | — | USDD Savings APY per chain (TRON / ETH / BSC) | No |
-| `get_susdd_supply` | — | sUSDD total supply broken down by chain | No |
-| `get_supply_history` | — | Time series of USDD & sUSDD supply per chain | No |
-| `get_collateral_history` | — | Time series of protocol-wide collateral value per chain | No |
-| `get_circulating_supply` | — | Raw USDD circulating supply | No |
-| `get_total_supply` | — | Raw USDD total supply | No |
-| `get_ilk_collateral_history` | `ilk` | Per-ilk historical ratio, debt, APY | No |
+| Tool | Inputs | Current status | Use for |
+|------|--------|----------------|---------|
+| `get_earn_apy` | — | Verified OK | Cross-chain Earn APY |
+| `get_susdd_supply` | — | Verified OK | sUSDD supply breakdown |
+| `get_total_supply` | — | Verified OK | Raw USDD total supply |
+| `get_supply_history` | — | MCP tool available; upstream may return an error | Historical USDD/sUSDD supply |
+
+Always call these as MCP tools. Do not fetch `openapi.usdd.io` or other upstream URLs directly from the skill workflow. If an MCP tool returns `isError: true`, surface the error message and stop. Do not invent alternate paths.
+
+Unavailable tool names: `get_collateral_history`, `get_circulating_supply`, and `get_ilk_collateral_history`. The backend service and MCP do not expose them. If a user asks for collateral history, per-ilk historical ratios, or raw circulating supply through those tools, say that the MCP does not provide that data. For current protocol-level supply or collateral snapshots, use the official MCP current-state tools below.
+
+Never call `get_supply_history` for collateral, collateral-ratio, Vault, or per-ilk history questions. `get_supply_history` is only for USDD/sUSDD supply over time.
+
+## Official MCP Current-State Analytics
+
+Use the official MCP for current snapshots:
+
+| User asks about | Official tool |
+|---|---|
+| Overall protocol supply, TVL, savings TVL, Smart Allocator earning | `get_protocol_metrics` |
+| Chain-level mainnet metrics for TRON/ETH/BSC | `get_chain_metrics` |
+| Latest collateral highest-price data | `get_collateral_prices` |
+| Current PSM route fees/availability | `get_psm_metrics` |
+| Current PSM market status | `get_psm_status` |
+| Current Savings status for a network | `get_savings_status` |
+| Current Vault/CDP state | `get_vault_summary`, `analyze_vault_risk` |
+| Treasury report summary | `get_treasury_summary` |
+| JST buyback/burn stats | `get_jst_buyback_stats` |
+| Smart Allocator overview/assets/proof/debt | `get_smart_allocator_overview`, `get_assets_breakdown`, `get_proof_of_reserve`, `get_debt_overview` |
+
+Official MCP current-state tools use `network` when applicable. If the user asks for chain-specific current state without specifying a network, ask or present all supported mainnet families when the tool supports it.
 
 ## Workflow Rules
 
-### Chain selection
-If the user asks about supply / APY without naming a chain, present all chains (TRON, ETH, BSC). Do not silently default to TRON.
+### Routing
 
-### Data freshness footer
-Every analytics response carries a `_meta` block with `dataTime` (ISO8601) and `source` (`openapi.usdd.io`). When summarizing for the user, append a one-line footer:
-`Data time: <ISO8601> · Source: openapi.usdd.io`
+- Supported APY/supply analytics -> local analytics MCP.
+- Current balances, wallet state, Vault state, PSM status, Savings status, protocol metrics, treasury, and Smart Allocator -> official MCP.
+- If both are useful, call both and label sources separately.
 
-### Cross-MCP routing
-For *current* state (TVL, balance, vault summary, PSM status, savings status, smart allocator detail), call the official MCP tools (`get_protocol_overview`, `get_chain_metrics`, etc.). Use this skill's tools only when the question is **historical** or per-chain analytics not covered by the official MCP.
+### Chain / Network Selection
+
+For local APY and supply breakdown tools, if the user omits a chain, present all returned chains rather than defaulting to TRON.
+
+For official MCP tools, use official `network` values (`tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, `bsc_testnet`). Ask when the user omitted a network and the query cannot safely be answered for all mainnet families.
+
+### Data Freshness Footer
+
+Every local analytics response carries `_meta` with:
+
+- `dataTime`
+- `source`
+
+When summarizing local analytics output, append:
+
+`Data time: <ISO8601> · Source: <source from _meta>`
+
+For official MCP current-state data, mention the tool/source in prose when freshness matters, because those outputs do not use this repo's `_meta` envelope.
 
 ## Example Prompts
 
-- "How did USDD circulating supply change last week per chain?"
-- "Which chain has the highest Earn APY today?"
-- "Compare TRX-A and stETH-A collateral ratios over the last 30 days."
-- "What's the current raw circulating supply of USDD?"
-- "Show sUSDD supply breakdown across TRON, ETH, BSC."
+- "Which chain has the highest Earn APY today?" -> local `get_earn_apy`
+- "Show sUSDD supply breakdown across chains." -> local `get_susdd_supply`
+- "What's the current protocol supply of USDD?" -> official `get_protocol_metrics`, or local `get_total_supply` if a raw total-supply number is sufficient
+- "What's USDD protocol TVL right now?" -> official `get_protocol_metrics`
+- "Show Smart Allocator proof of reserve." -> official `get_proof_of_reserve`
+- "Compare TRX-A collateral history." -> explain that no backend or MCP tool currently provides per-ilk collateral history; offer current `get_oracle_status` / Vault risk reads if useful
 
 ## Security
 
-- Read-only skill. No transaction signing.
-- No API key required (`openapi.usdd.io` is keyless).
+- Read-only skill. No approvals, no signing, no writes.
+- Do not use analytics responses as authorization to execute transactions; product skills must run their own write prechecks.
+- Do not hide MCP tool failures. They indicate the tool or its upstream data source needs maintenance.

@@ -1,85 +1,113 @@
 # USDD Vault (CDP) — AI Agent Skill
 
-This skill enables AI agents to interact with USDD Vaults (CDPs): open a vault, lock collateral, mint USDD against it, monitor health, repay, withdraw, and close. Vault is the primary mint route for USDD.
+This skill enables AI agents to manage USDD Vaults/CDPs through the official `@usdd/mcp-server-usdd` MCP server: discover supported ilks, inspect oracle and vault risk, open vaults, add collateral, mint USDD, repay, withdraw, and close.
 
-Note: This skill requires the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for write operations and all reads. This repo's local MCP is used only for per-ilk historical analytics (`get_ilk_collateral_history`).
+This repo's local analytics MCP is read-only and does not provide per-ilk collateral history.
 
 ## Prerequisites
 
 - Node.js v20+
 - Official MCP installed: `npm install -g @usdd/mcp-server-usdd`
-- This repo's MCP for per-ilk history
+- This repo's MCP registered only if supported APY/supply analytics are needed
+
+## Network and Ilk Scope
+
+Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc_testnet`. Do not hard-code Vault support by chain. For every Vault workflow:
+
+1. Resolve the user-facing chain to official MCP `network`.
+2. Call `get_supported_ilks({ network })`.
+3. Proceed only if the requested `ilk` appears in that network's returned ilks.
+4. If the requested ilk/network is unsupported, explain the supported alternatives returned by the tool.
 
 ## Available Tools
 
-| Tool | Inputs | Description | Write? | Requires Approval |
-|------|--------|-------------|--------|--------------------|
-| `get_oracle_status` (official) | — | Latest collateral prices and oracle freshness | No | — |
-| `get_supported_ilks` (official) | — | Supported ilks, min ratio, stability fee, debt ceiling | No | — |
-| `get_user_vaults` (official) | `address`, `chain` | All vaults owned by the user on a chain | No | — |
-| `get_vault_summary` (official) | `vaultId`, `chain` | Collateral, debt, ratio for a specific vault | No | — |
-| `analyze_vault_risk` (official) | `vaultId`, `chain` | Liquidation price, health factor, risk tier | No | — |
-| `get_token_balance` (official) | `address`, `token`, `chain` | Collateral / USDD balance | No | — |
-| `check_allowance` (official) | `address`, `spender`, `token`, `chain` | Vault-contract allowance | No | — |
-| `approve_token` (official) | `token`, `spender`, `amount`, `chain` | Approve collateral or USDD for the Vault contract | Yes | (this IS the approval) |
-| `get_ilk_collateral_history` (this repo) | `ilk` | Per-ilk historical ratio, debt, APY | No | — |
-| `open_vault` (official) | `ilk`, `chain`, `from` | Open a new vault for a given ilk | Yes | None |
-| `deposit_and_mint` (official) | `vaultId`, `collateralAmount`, `mintAmount`, `chain`, `from` | Lock collateral and mint USDD in one tx | Yes | Collateral token (skip if TRX native) |
-| `mint_usdd` (official) | `vaultId`, `amount`, `chain`, `from` | Mint additional USDD from an existing vault | Yes | None |
-| `repay_usdd` (official) | `vaultId`, `amount`, `chain`, `from` | Repay USDD debt | Yes | USDD |
-| `withdraw_collateral` (official) | `vaultId`, `amount`, `chain`, `from` | Withdraw unlocked collateral | Yes | None |
-| `close_vault` (official) | `vaultId`, `chain`, `from` | Repay all debt and withdraw all collateral | Yes | USDD (for repay portion) |
+| Tool | Inputs | Description | Write? |
+|------|--------|-------------|--------|
+| `get_protocol_overview` (official) | `network?` | Protocol addresses, ilks, PSM markets, ceilings | No |
+| `get_supported_ilks` (official) | `network?` | Configured collateral types and PSM joins for a network | No |
+| `get_oracle_status` (official) | `ilk`, `network?` | Liquidation ratio, penalty, oracle status for an ilk | No |
+| `get_user_vaults` (official) | `address?`, `network?` | Vault/CDP IDs owned by an address or active wallet proxy | No |
+| `get_vault_summary` (official) | `cdpId`, `network?` | Collateral, debt, debt ceiling/floor, health factor, risk level | No |
+| `analyze_vault_risk` (official) | `cdpId`, `network?` | Vault summary plus warnings | No |
+| `get_native_balance` (official) | `owner?`, `network?` | Gas-token balance | No |
+| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network?` | Collateral / USDD balance | No |
+| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network?` | ERC20/TRC20 allowance and sufficiency | No |
+| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network?` | Approve a protocol spender | Yes |
+| `open_vault` (official) | `ilk`, `network?` | Open or reuse a vault for an ilk | Yes |
+| `deposit_and_mint` (official) | `ilk`, `collateralAmount`, `drawAmount`, `cdpId?`, `transferFrom?`, `network?` | Deposit collateral and mint USDD | Yes |
+| `mint_usdd` (official) | `cdpId`, `amount`, `network?` | Draw additional USDD debt | Yes |
+| `repay_usdd` (official) | `cdpId`, `amount`, `network?` | Repay USDD debt | Yes |
+| `withdraw_collateral` (official) | `cdpId`, `ilk`, `amount`, `network?` | Withdraw collateral | Yes |
+| `close_vault` (official) | `cdpId`, `ilk`, `amountToFree`, `network?` | Repay all debt, then free collateral | Yes |
 
-## Approval Matrix
+Official write tools use the active MCP wallet. They do not accept `from`; call `get_wallet_address({ network })` before confirmation.
 
-| Tool | Requires approval? | Token | Why |
-|---|---|---|---|
-| `deposit_and_mint` | Yes (unless TRX native) | Collateral token | Vault contract pulls collateral from user |
-| `repay_usdd` / `close_vault` | Yes | USDD | Vault contract pulls USDD from user |
-| `open_vault` / `mint_usdd` / `withdraw_collateral` | No | — | No inbound token pull (open is bookkeeping, mint creates new debt, withdraw returns user assets) |
+## Approval Rules
+
+| Operation | Token approval needed? | Notes |
+|---|---|---|
+| Native collateral deposit | No token allowance | Still check native balance for collateral plus gas. |
+| ERC20/TRC20 collateral deposit | Yes | Resolve collateral token/decimals from `get_supported_ilks`; resolve the protocol spender from official protocol config or existing proxy context before `approve_token`. |
+| `repay_usdd` / `close_vault` | Yes for USDD | The official service may auto-approve missing USDD to the proxy, but the agent still checks balance/allowance first when possible. |
+| `open_vault`, `mint_usdd`, `withdraw_collateral` | No inbound token pull | Still require risk review and chat confirmation. |
+
+`approve_token` rejects spenders that are not official protocol contracts. If spender resolution is ambiguous, do not invent an address; fetch more protocol data or stop with the exact blocker.
 
 ## Workflow Rules
 
-### Chain
-Vault is deployed on TRON only (in v1). If the user asks about Vault on ETH or BSC, explain the scope and offer the user the equivalent USDD path via the PSM skill instead. Re-check by calling `get_supported_ilks` if uncertain.
+### Read-Only Risk Review
 
-### Risk-summary precheck (Vault-specific, runs BEFORE step 1 of the standard 6 steps)
+For "health", "risk", "liquidation", or "what should I do" requests:
 
-Before *any* of the 6-step write precheck, for any write that affects an existing vault (`deposit_and_mint` on existing vault / `mint_usdd` / `repay_usdd` / `withdraw_collateral` / `close_vault`), the AI:
+1. If no `cdpId` is supplied, call `get_user_vaults({ network })`.
+2. Call `get_vault_summary({ cdpId, network })`.
+3. Call `analyze_vault_risk({ cdpId, network })`.
+4. Report debt, collateral, health factor, `riskLevel`, liquidation ratio, debt ceiling/floor if relevant, and warnings.
 
-- Calls `analyze_vault_risk(vaultId, chain)`.
-- Emits exactly three lines to the user:
-  - `Current collateral ratio: <value>%`
-  - `Liquidation price: <token> at <price>`
-  - `Risk tier: <SAFE | WATCH | DANGER>`
-- Only after these three lines are shown does the AI move on to step 1 of the 6-step precheck.
+Official risk levels are `no-debt`, `healthy`, `medium`, `high`, and `critical`. If you present a simplified label, map it explicitly from `riskLevel`; do not claim the tool returned `SAFE`, `WATCH`, or `DANGER`.
 
-### Write precheck (standard 6 steps — non-skippable)
+### Existing-Vault Write Precheck
 
-1. Check chain (TRON)
-2. Check balance (collateral or USDD)
-3. Check allowance (Vault contract)
-4. Approve if needed
-5. **Chat confirmation (non-skippable)** — restate: `action (open / deposit+mint / mint / repay / withdraw / close) / vaultId / collateral amount / mint or repay amount / chain / from-address / projected new ratio / projected new liquidation price`
-6. Execute
+For `deposit_and_mint` on an existing vault, `mint_usdd`, `repay_usdd`, `withdraw_collateral`, and `close_vault`, run the risk precheck before the standard write precheck:
 
-The chat-confirmation line for vault writes MUST include the **projected new collateral ratio** and **projected new liquidation price** after the action, computed from oracle + intended numbers. This is the single most important field for the user to verify.
+1. Call `analyze_vault_risk({ cdpId, network })`.
+2. Emit exactly three lines:
+   - `Current health factor: <value or no-debt>`
+   - `Risk level: <no-debt | healthy | medium | high | critical>`
+   - `Warnings: <summary from warnings[]>`
+3. If `riskLevel` is `critical` and the user wants to mint more or withdraw collateral, refuse and recommend repay/top-up instead.
 
-### When to refuse outright (or strongly warn)
+### Standard Vault Write Precheck
 
-- If `analyze_vault_risk` returns `risk tier = DANGER` and the user asks to **mint more** or **withdraw collateral**, refuse and recommend repay / top-up instead. Do not proceed to step 1 of the precheck.
-- If projected new collateral ratio after the action would dip below the ilk's `liquidationRatio + 10%` safety buffer, warn loudly in step 5 and require the user to type a *stronger* confirmation phrase (e.g. echo back the projected ratio).
+Before any Vault write:
+
+1. Confirm `network` and `ilk` with `get_supported_ilks({ network })`.
+2. Call `get_wallet_address({ network })`.
+3. Call `get_native_balance({ network })` for gas.
+4. For spend operations, call `get_token_balance` for the collateral token or USDD.
+5. If allowance is needed, call `check_allowance`; call `approve_token` only if insufficient.
+6. Chat confirmation: restate action, `network`, active wallet, `ilk`, `cdpId` if any, collateral amount, draw/repay/withdraw amount, risk level, and expected direction of risk change.
+7. Wait for an affirmative user response.
+8. Execute the write tool.
+9. Verify with `get_vault_summary` and `analyze_vault_risk`.
+
+### Projection Discipline
+
+The official MCP does not expose a dedicated projected-ratio preview tool. When projecting a post-action ratio, clearly label it as an estimate from current `get_vault_summary`, `get_oracle_status`, and user-provided amounts. If the estimate is near the liquidation ratio or the inputs are incomplete, require stronger confirmation or refuse the risky action.
 
 ## Example Prompts
 
-- "What is my vault health?" → `get_user_vaults`, then `analyze_vault_risk` for each
-- "I have 1000 TRX, mint 200 USDD safely." → `get_oracle_status`, compute safe ratio, full precheck, `deposit_and_mint`
-- "How risky is vault #42 right now?" → `analyze_vault_risk`, emit 3-line risk summary
-- "Repay all my USDD debt." → risk summary, full precheck (USDD approve), `repay_usdd` for full debt
-- "Compare TRX-A and stETH-A collateral ratios over the last 30 days." → `get_ilk_collateral_history` (this repo's MCP)
+- "What is my vault health on TRON?" -> `get_user_vaults`, then `get_vault_summary` and `analyze_vault_risk`
+- "I have 1000 TRX, mint 200 USDD safely." -> `get_supported_ilks`, `get_oracle_status`, full write precheck, `deposit_and_mint`
+- "How risky is vault #42 right now?" -> `get_vault_summary`, `analyze_vault_risk`
+- "Repay 100 USDD on vault #42." -> risk precheck, USDD balance/allowance check, confirmation, `repay_usdd`
+- "Compare TRX-A collateral ratios over the last 30 days." -> explain that no backend or MCP tool currently provides per-ilk collateral history; offer current `get_oracle_status`, `get_vault_summary`, or `analyze_vault_risk` reads instead
 
 ## Security
 
-- Vault writes are the highest-risk in this bundle. **Risk summary + projected ratio + chat confirmation are all non-skippable.**
-- All writes pass through `@usdd/mcp-server-usdd`. This skill never holds private keys.
-- For ilks with `DANGER` risk tier, mint and withdraw are refused. Only repay or top-up paths proceed.
+- Vault writes are high-risk. Risk review, wallet confirmation, and chat confirmation are non-skippable.
+- Never default to `tron` just because the official MCP can. Ask when the user omitted network.
+- Never invent `cdpId`, `ilk`, token address, spender, decimals, or wallet address.
+- Do not fetch upstream API URLs directly for historical collateral data. No backend or MCP tool currently provides `get_ilk_collateral_history`.
+- Do not call `get_supply_history` for collateral-ratio, Vault, or per-ilk history questions; that tool is supply-only.
+- All writes pass through `@usdd/mcp-server-usdd`; this skill never holds private keys.

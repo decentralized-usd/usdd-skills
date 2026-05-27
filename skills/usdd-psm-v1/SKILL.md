@@ -1,63 +1,107 @@
 # USDD PSM (Peg Stability Module) — AI Agent Skill
 
-This skill enables AI agents to swap supported stablecoins to / from USDD at a fixed rate with no slippage, via the USDD PSM contracts on TRON, ETH, and BSC.
+This skill enables AI agents to swap supported stablecoins to/from USDD through USDD PSM markets using the official `@usdd/mcp-server-usdd` MCP server.
 
-Note: This skill requires the USDD official MCP server ([@usdd/mcp-server-usdd](https://github.com/decentralized-usd/mcp-server-usdd)) for write operations and all reads. This repo's local MCP is not used by this skill.
+The local analytics MCP is not used for PSM writes.
 
 ## Prerequisites
 
 - Node.js v20+
 - Official MCP installed: `npm install -g @usdd/mcp-server-usdd`
 
+## Core Concepts
+
+Official PSM tools require:
+
+- `network`: one of `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, `bsc_testnet`
+- `market`: a PSM market key such as `PSM-USDT`, `PSM-USDC`, or `PSM-USD1`
+
+If the user gives only a stable symbol such as "USDT", resolve it to a market by calling `get_protocol_overview({ network })` or `get_supported_ilks({ network })` and checking returned `psmMarkets`. If the user does not provide a network, ask before proceeding.
+
 ## Available Tools
 
-| Tool | Inputs | Description | Write? | Requires Approval |
-|------|--------|-------------|--------|--------------------|
-| `get_psm_status` (official MCP) | `chain` | Available liquidity, fees in/out, supported stables on a chain | No | — |
-| `get_psm_metrics` (official MCP) | — | Historical PSM metrics across chains | No | — |
-| `get_token_balance` (official MCP) | `address`, `token`, `chain` | Input stable / USDD balance | No | — |
-| `check_allowance` (official MCP) | `address`, `spender`, `token`, `chain` | PSM-contract allowance for the input token | No | — |
-| `approve_token` (official MCP) | `token`, `spender`, `amount`, `chain` | Approve input token spending for the PSM contract | Yes | (this IS the approval) |
-| `psm_swap_to_usdd` (official MCP) | `amount`, `stable`, `chain`, `from` | Swap stablecoin → USDD | Yes | Input stable (USDT / USDC / …) |
-| `psm_swap_from_usdd` (official MCP) | `amount`, `stable`, `chain`, `from` | Swap USDD → stablecoin | Yes | USDD |
+| Tool | Inputs | Description | Write? |
+|------|--------|-------------|--------|
+| `get_protocol_overview` (official) | `network?` | Protocol addresses, configured ilks, and PSM markets | No |
+| `get_supported_ilks` (official) | `network?` | Configured collateral types and PSM joins | No |
+| `get_psm_status` (official) | `market`, `network?` | PSM market config, buy/sell enablement, in/out fees | No |
+| `get_psm_metrics` (official) | `market`, `network?` | Route availability and route fees | No |
+| `get_native_balance` (official) | `owner?`, `network?` | Gas-token balance | No |
+| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network?` | Input token balance | No |
+| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network?` | Token allowance and sufficiency | No |
+| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network?` | Approve token spending for a protocol spender | Yes |
+| `psm_swap_to_usdd` (official) | `market`, `amount`, `network?` | Sell the market gem into USDD | Yes |
+| `psm_swap_from_usdd` (official) | `market`, `amount`, `network?` | Buy the market gem with USDD | Yes |
 
-## Approval Matrix
+Official write tools use the active MCP wallet. They do not accept `from`; call `get_wallet_address({ network })` before confirmation.
 
-| Tool | Requires approval? | Token | Why |
+## Direction Semantics
+
+| User intent | Official tool | `amount` means | Fee field to show |
 |---|---|---|---|
-| `psm_swap_to_usdd` | Yes | Input stablecoin | PSM contract pulls the stable from the user |
-| `psm_swap_from_usdd` | Yes | USDD | PSM contract pulls USDD from the user |
+| Stablecoin -> USDD | `psm_swap_to_usdd` | Amount of market gem to sell, e.g. USDT amount for `PSM-USDT` | `feeInPercent` / route fee from gem to USDD |
+| USDD -> stablecoin | `psm_swap_from_usdd` | Amount of market gem to buy, not the amount of USDD to spend | `feeOutPercent` / route fee from USDD to gem |
+
+For `psm_swap_from_usdd`, be explicit: if the user says "spend 100 USDD", compute or ask for the target gem amount before calling the tool. Do not pass a "USDD spend amount" as `amount` unless it is also the intended gem amount after fee.
+
+## Direction-Specific Spenders
+
+Use the spender that actually pulls the input token:
+
+| Direction | Input token | Spender for `check_allowance` / `approve_token` |
+|---|---|---|
+| Stablecoin -> USDD (`psm_swap_to_usdd`) | Market gem, e.g. USDT for `PSM-USDT` | The market `gemJoin` address from `get_psm_status().market.gemJoin` or `get_supported_ilks()` |
+| USDD -> stablecoin (`psm_swap_from_usdd`) | USDD | The PSM contract address from `get_psm_status().market.psm` |
+
+Do not approve the PSM contract for `psm_swap_to_usdd` unless the official MCP output explicitly says the market has no `gemJoin` spender. The PSM contract calls `gemJoin.join(..., msg.sender)`, and `gemJoin` performs the token `transferFrom`.
 
 ## Workflow Rules
 
-### Chain selection (mandatory)
-PSM is deployed on TRON, ETH, and BSC with different supported stables and fees per chain. If the user does not specify a chain, ask explicitly. **Never default silently to TRON.**
+### PSM Quote / Read
 
-### Write precheck (7 steps — non-skippable; PSM-specific because it adds a capacity check between chain and balance)
+1. Resolve `network`.
+2. Resolve `market`.
+3. Call `get_psm_status({ market, network })`.
+4. Call `get_psm_metrics({ market, network })` when the user asks about routes, fee comparison, or availability.
+5. Report buy/sell enablement, fees, market contract, gem token, gem decimals, and route availability.
 
-Before invoking any `Write? = Yes` tool:
+The official tools expose enablement and route availability. They do not guarantee a remaining-capacity number. Do not claim a capacity check unless the returned data contains a concrete capacity/liquidity field.
 
-1. **Check chain** — confirm user specified the chain; verify the PSM contract supports the input stable on that chain.
-2. **Check PSM capacity** — call `get_psm_status`; the swap must not exceed remaining liquidity / debt ceiling for that direction.
-3. **Check balance** — call `get_token_balance` for the input token; cover swap amount + gas reserve.
-4. **Check allowance** — call `check_allowance` for the PSM contract on the chosen chain. If allowance ≥ swap amount, skip to step 6.
-5. **Approve if needed** — call `approve_token`. Wait for on-chain confirmation.
-6. **Chat confirmation (non-skippable)** — restate: `direction (in / out) / input amount / output amount after fee / chain / PSM contract / from-address`. Wait for the user to type an affirmative confirmation.
-7. **Execute** — call `psm_swap_to_usdd` or `psm_swap_from_usdd`. Return the receipt.
+### Write Precheck
 
-(Step 2 — PSM capacity — is unique to this skill; it does not apply to Earn / Vault.)
+Before either PSM swap:
 
-### Fee + slippage
-PSM swaps have **zero slippage** but a **fixed fee** in / out. Always show the fee explicitly in the chat-confirmation message so the user sees the net output amount, not just the input.
+1. Resolve `network` and `market`; verify the market exists.
+2. Call `get_wallet_address({ network })`.
+3. Call `get_psm_status({ market, network })` and verify the relevant direction is enabled:
+   - `psm_swap_to_usdd`: `sellEnabled` must be true.
+   - `psm_swap_from_usdd`: `buyEnabled` must be true.
+4. Call `get_psm_metrics({ market, network })` and show the route fee/availability if present.
+5. Resolve input token:
+   - to USDD: market gem token and decimals from `get_psm_status().market`.
+   - from USDD: USDD token from `get_protocol_overview({ network }).addresses.usdd`.
+6. Resolve spender from the direction-specific spender table above.
+7. Call `get_native_balance({ network })` for gas.
+8. Call `get_token_balance` for the input token.
+9. Call `check_allowance` for the input token and resolved spender.
+10. If allowance is insufficient, call `approve_token` for the resolved spender.
+11. Chat confirmation: restate direction, `network`, `market`, input amount, expected output/net amount after fee if calculable, fee percent, PSM contract, token spender, and active wallet.
+12. Wait for an affirmative user response.
+13. Execute `psm_swap_to_usdd` or `psm_swap_from_usdd`.
+14. Verify by re-checking balances or `get_psm_status`.
+
+If any token address, spender, or decimals cannot be resolved from official MCP outputs, stop and explain the missing field. Do not guess contract addresses.
 
 ## Example Prompts
 
-- "How much USDC can the PSM still take on BSC?" → `get_psm_status` chain=bsc
-- "Swap 500 USDT to USDD on TRON." → full precheck, then `psm_swap_to_usdd`
-- "Redeem 1000 USDD to USDT on Ethereum, what fee will I pay?" → `get_psm_status`, then chat-confirm with explicit fee, then `psm_swap_from_usdd`
+- "What PSM markets exist on BSC?" -> `get_protocol_overview({ network: "bsc" })`
+- "What is the fee to swap USDT into USDD on TRON?" -> `get_psm_status({ market: "PSM-USDT", network: "tron" })`
+- "Swap 500 USDT to USDD on TRON." -> resolve `PSM-USDT`, full write precheck, `psm_swap_to_usdd`
+- "Buy 1000 USDC from USDD on Ethereum." -> resolve `PSM-USDC`, full write precheck, `psm_swap_from_usdd` with `amount="1000"`
 
 ## Security
 
-- All writes pass through `@usdd/mcp-server-usdd`. This skill never holds private keys.
-- PSM fees and capacity are governance-controlled and can change. Always fetch fresh `get_psm_status` before any swap quote.
-- Chat confirmation (step 6) must show fees explicitly.
+- PSM swaps are low slippage by design but not free. Always show the fee and direction-specific amount semantics.
+- Never default to `tron` when the user omitted network.
+- Never infer a `market` if multiple markets could match the user's wording.
+- All writes pass through `@usdd/mcp-server-usdd`; this skill never holds private keys.
