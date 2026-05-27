@@ -52,12 +52,12 @@ export class USDDClient {
   }
 
   async getEarnApy() {
-    const raw = await this._fetchWithRetry('/external/earn-apy');
+    const raw = await this._fetchWithRetry('/api/v1/external/earn-apy');
     return this._withMeta(raw);
   }
 
   async getSusddSupply() {
-    const raw = await this._fetchWithRetry('/external/total-supply/susdd');
+    const raw = await this._fetchWithRetry('/api/v1/external/total-supply/susdd');
     return this._withMeta(raw);
   }
 
@@ -66,25 +66,9 @@ export class USDDClient {
     return this._withMeta(raw);
   }
 
-  async getCollateralHistory() {
-    const raw = await this._fetchWithRetry('/data-platform/overview/collateral-value-history');
-    return this._withMeta(raw);
-  }
-
-  async getCirculatingSupply() {
-    const raw = await this._fetchWithRetry('/circulatingSupply');
-    return this._withMeta({ value: typeof raw === 'number' ? raw : Number(raw) });
-  }
-
   async getTotalSupply() {
     const raw = await this._fetchWithRetry('/totalSupply');
     return this._withMeta({ value: typeof raw === 'number' ? raw : Number(raw) });
-  }
-
-  async getIlkCollateralHistory(ilk) {
-    if (!ilk) throw new TypeError('ilk is required');
-    const raw = await this._fetchWithRetry(`/data-platform/collateral-history?ilk=${encodeURIComponent(ilk)}`);
-    return this._withMeta(raw);
   }
 
   _withMeta(data) {
@@ -101,7 +85,7 @@ export class USDDClient {
 export default USDDClient;
 
 async function main() {
-  const [command, ...args] = process.argv.slice(2);
+  const [command] = process.argv.slice(2);
   const client = new USDDClient();
 
   try {
@@ -115,28 +99,15 @@ async function main() {
       case 'supply-history':
         console.log(JSON.stringify(await client.getSupplyHistory(), null, 2));
         break;
-      case 'collateral-history':
-        console.log(JSON.stringify(await client.getCollateralHistory(), null, 2));
-        break;
-      case 'circulating-supply':
-        console.log(JSON.stringify(await client.getCirculatingSupply(), null, 2));
-        break;
       case 'total-supply':
         console.log(JSON.stringify(await client.getTotalSupply(), null, 2));
-        break;
-      case 'ilk-collateral-history':
-        if (!args[0]) { console.error('Usage: ilk-collateral-history <ilk>'); process.exit(2); }
-        console.log(JSON.stringify(await client.getIlkCollateralHistory(args[0]), null, 2));
         break;
       default:
         console.log('Available commands:');
         console.log('  earn-apy                       Per-chain Earn APY');
         console.log('  susdd-supply                   sUSDD supply per chain');
         console.log('  supply-history                 USDD/sUSDD supply time series');
-        console.log('  collateral-history             Protocol-wide collateral time series');
-        console.log('  circulating-supply             Raw circulating supply');
         console.log('  total-supply                   Raw total supply');
-        console.log('  ilk-collateral-history <ilk>   Per-ilk collateral series');
         process.exit(command ? 1 : 0);
     }
   } catch (error) {

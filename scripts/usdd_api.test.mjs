@@ -41,10 +41,10 @@ test('USDDClient._fetchWithRetry throws USDDApiError after 3 failures', async ()
   );
 });
 
-test('USDDClient.getEarnApy fetches /external/earn-apy and attaches meta', async () => {
+test('USDDClient.getEarnApy fetches /api/v1/external/earn-apy and attaches meta', async () => {
   const payload = { tron: 6.5, eth: 5.1, bsc: 4.8 };
   const fakeFetch = async (url) => {
-    assert.equal(url, 'https://openapi.usdd.io/external/earn-apy');
+    assert.equal(url, 'https://openapi.usdd.io/api/v1/external/earn-apy');
     return { ok: true, status: 200, json: async () => payload };
   };
   const client = new USDDClient({ fetchImpl: fakeFetch });
@@ -54,10 +54,10 @@ test('USDDClient.getEarnApy fetches /external/earn-apy and attaches meta', async
   assert.match(data._meta.dataTime, /^\d{4}-\d{2}-\d{2}T/);
 });
 
-test('USDDClient.getSusddSupply fetches /external/total-supply/susdd', async () => {
+test('USDDClient.getSusddSupply fetches /api/v1/external/total-supply/susdd', async () => {
   const payload = { tron: '1234567', eth: '7654321', bsc: '111111' };
   const fakeFetch = async (url) => {
-    assert.equal(url, 'https://openapi.usdd.io/external/total-supply/susdd');
+    assert.equal(url, 'https://openapi.usdd.io/api/v1/external/total-supply/susdd');
     return { ok: true, status: 200, json: async () => payload };
   };
   const client = new USDDClient({ fetchImpl: fakeFetch });
@@ -78,29 +78,6 @@ test('USDDClient.getSupplyHistory fetches supply-value-history', async () => {
   assert.equal(data._meta.source, 'openapi.usdd.io');
 });
 
-test('USDDClient.getCollateralHistory fetches collateral-value-history', async () => {
-  const payload = { points: [{ date: '2026-05-20', total: 1.2e9 }] };
-  const fakeFetch = async (url) => {
-    assert.equal(url, 'https://openapi.usdd.io/data-platform/overview/collateral-value-history');
-    return { ok: true, status: 200, json: async () => payload };
-  };
-  const client = new USDDClient({ fetchImpl: fakeFetch });
-  const data = await client.getCollateralHistory();
-  assert.equal(data.points.length, 1);
-  assert.equal(data._meta.source, 'openapi.usdd.io');
-});
-
-test('USDDClient.getCirculatingSupply fetches /circulatingSupply as number', async () => {
-  const fakeFetch = async (url) => {
-    assert.equal(url, 'https://openapi.usdd.io/circulatingSupply');
-    return { ok: true, status: 200, json: async () => 720000000.5 };
-  };
-  const client = new USDDClient({ fetchImpl: fakeFetch });
-  const data = await client.getCirculatingSupply();
-  assert.equal(data.value, 720000000.5);
-  assert.equal(data._meta.source, 'openapi.usdd.io');
-});
-
 test('USDDClient.getTotalSupply fetches /totalSupply as number', async () => {
   const fakeFetch = async (url) => {
     assert.equal(url, 'https://openapi.usdd.io/totalSupply');
@@ -110,21 +87,4 @@ test('USDDClient.getTotalSupply fetches /totalSupply as number', async () => {
   const data = await client.getTotalSupply();
   assert.equal(data.value, 725000000);
   assert.equal(data._meta.source, 'openapi.usdd.io');
-});
-
-test('USDDClient.getIlkCollateralHistory hits /data-platform/collateral-history with ilk param', async () => {
-  const payload = { ilk: 'TRX-A', points: [{ date: '2026-05-20', ratio: 3.2 }] };
-  const fakeFetch = async (url) => {
-    assert.equal(url, 'https://openapi.usdd.io/data-platform/collateral-history?ilk=TRX-A');
-    return { ok: true, status: 200, json: async () => payload };
-  };
-  const client = new USDDClient({ fetchImpl: fakeFetch });
-  const data = await client.getIlkCollateralHistory('TRX-A');
-  assert.equal(data.ilk, 'TRX-A');
-  assert.equal(data._meta.source, 'openapi.usdd.io');
-});
-
-test('USDDClient.getIlkCollateralHistory throws on missing ilk', async () => {
-  const client = new USDDClient({ fetchImpl: async () => { throw new Error('should not be called'); } });
-  await assert.rejects(() => client.getIlkCollateralHistory(), /ilk is required/);
 });

@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node scripts/mcp_server.mjs",
     "test": "node --test scripts/usdd_api.test.mjs",
-    "smoke": "node scripts/usdd_api.mjs circulating-supply",
+    "smoke": "node scripts/usdd_api.mjs total-supply",
     "mcp:list-tools": "node scripts/mcp_server.mjs --list-tools"
   },
   "keywords": [
