@@ -9,9 +9,9 @@ Two MCP servers, non-overlapping:
 | Server | Package | Role |
 |---|---|---|
 | Official MCP | [`@usdd/mcp-server-usdd`](https://github.com/decentralized-usd/mcp-server-usdd) | Wallet/network state, protocol reads, Vault / PSM / Savings writes, token transfer, treasury, Smart Allocator |
-| Analytics MCP (this repo) | `scripts/mcp_server.mjs` | Read-only supported analytics tools; the MCP owns any upstream data access |
+| Analytics MCP (this repo) | `scripts/mcp_server.mjs` | Read-only public USDD API tools; the MCP owns all upstream REST access |
 
-Route current state and writes to the official MCP. Route supported APY/supply analytics to this repo's analytics MCP. Agents must call MCP tools for analytics data; do not fetch upstream API URLs directly from skill workflows. The backend service and MCP do not expose `get_collateral_history`, `get_circulating_supply`, or `get_ilk_collateral_history`; treat requests for those unavailable histories as unsupported instead of inventing alternate calls. Never use `get_supply_history` for collateral, collateral-ratio, Vault, or per-ilk history; it is supply-only.
+Route wallet state, on-chain reads, and writes to the official MCP. Route public REST analytics and dashboard data to this repo's analytics MCP. Agents must call MCP tools for analytics data; do not fetch upstream API URLs directly from skill workflows. `get_supply_history` is supply-only; use `get_collateral_history` or `get_chain_collateral_history` for collateral history. There is still no per-ilk historical tool named `get_ilk_collateral_history`; the public `collateral-history` endpoint is keyed by `chain` and `interval`, not by `ilk`.
 
 ## Official MCP Capabilities
 

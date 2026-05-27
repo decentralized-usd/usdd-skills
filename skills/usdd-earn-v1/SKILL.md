@@ -2,7 +2,7 @@
 
 This skill enables AI agents to inspect USDD Savings, compare APY/sUSDD supply analytics, deposit USDD to receive sUSDD, and withdraw USDD from sUSDD through the official `@usdd/mcp-server-usdd` MCP server.
 
-Use the official MCP for current savings status and all writes. Use this repo's local analytics MCP for cross-chain APY and sUSDD supply analytics.
+Use the official MCP for current savings status and all writes. Use this repo's local analytics MCP for public API APY, APY history, USDD/sUSDD supply, and Earn TVL analytics.
 
 ## Prerequisites
 
@@ -31,6 +31,8 @@ Before any Earn write, call `get_savings_status({ network })`. If it returns `su
 | `withdraw_savings` (official) | `amount`, `network?` | Withdraw USDD amount from sUSDD | Yes |
 | `get_earn_apy` (local MCP) | — | Per-chain APY analytics via this repo's analytics MCP | No |
 | `get_susdd_supply` (local MCP) | — | sUSDD supply breakdown via this repo's analytics MCP | No |
+| `get_public_dsr_apy` (local MCP) | — | DSR APY current / average / history | No |
+| `get_public_protocol_overview` (local MCP) | — | Public protocol overview including Earn TVL | No |
 
 Official write tools use the active MCP wallet. They do not accept `from`; call `get_wallet_address({ network })` before confirmation.
 
@@ -47,6 +49,8 @@ Official write tools use the active MCP wallet. They do not accept `from`; call 
 
 - "Which chain has the highest APY?" -> call local `get_earn_apy`.
 - "How much sUSDD exists by chain?" -> call local `get_susdd_supply`.
+- "Show APY history." -> call local `get_public_dsr_apy`.
+- "Show Earn TVL." -> call local `get_public_protocol_overview` or `get_public_protocol_overview_info`.
 - Append `Data time: <ISO8601> · Source: <source from _meta>` for local analytics output.
 
 For current per-network wallet shares, sUSDD contract status, or current DSR fields, call official `get_savings_status({ network })`.

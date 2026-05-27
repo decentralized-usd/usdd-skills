@@ -60,4 +60,5 @@ and shows it in the chat-confirmation message. The user verifies this number, no
 
 - Vault product page: <https://usdd.io/vault>
 - Live ilk parameters: official MCP `get_supported_ilks`
-- Per-ilk historical analytics are not currently exposed by the backend service or MCP.
+- Chain-level collateral history is available through this repo's local analytics MCP.
+- Per-ilk historical analytics are not exposed by the public API or MCP.

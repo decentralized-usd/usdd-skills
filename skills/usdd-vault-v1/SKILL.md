@@ -101,13 +101,13 @@ The official MCP does not expose a dedicated projected-ratio preview tool. When 
 - "I have 1000 TRX, mint 200 USDD safely." -> `get_supported_ilks`, `get_oracle_status`, full write precheck, `deposit_and_mint`
 - "How risky is vault #42 right now?" -> `get_vault_summary`, `analyze_vault_risk`
 - "Repay 100 USDD on vault #42." -> risk precheck, USDD balance/allowance check, confirmation, `repay_usdd`
-- "Compare TRX-A collateral ratios over the last 30 days." -> explain that no backend or MCP tool currently provides per-ilk collateral history; offer current `get_oracle_status`, `get_vault_summary`, or `analyze_vault_risk` reads instead
+- "Compare TRX-A collateral ratios over the last 30 days." -> explain that no MCP tool currently provides per-ilk collateral history; offer chain-level `get_chain_collateral_history` or current `get_oracle_status`, `get_vault_summary`, or `analyze_vault_risk` reads instead
 
 ## Security
 
 - Vault writes are high-risk. Risk review, wallet confirmation, and chat confirmation are non-skippable.
 - Never default to `tron` just because the official MCP can. Ask when the user omitted network.
 - Never invent `cdpId`, `ilk`, token address, spender, decimals, or wallet address.
-- Do not fetch upstream API URLs directly for historical collateral data. No backend or MCP tool currently provides `get_ilk_collateral_history`.
-- Do not call `get_supply_history` for collateral-ratio, Vault, or per-ilk history questions; that tool is supply-only.
+- Do not fetch upstream API URLs directly for historical collateral data; use the local analytics MCP for public REST history.
+- Do not call `get_supply_history` for collateral-ratio, Vault, or per-ilk history questions; that tool is supply-only. Use `get_collateral_history` or `get_chain_collateral_history` for chain-level collateral history.
 - All writes pass through `@usdd/mcp-server-usdd`; this skill never holds private keys.

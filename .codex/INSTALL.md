@@ -59,7 +59,7 @@ ls ~/.agents/skills/usdd-skills
 # Should list: usdd-vault-v1/ usdd-psm-v1/ usdd-earn-v1/ usdd-analytics-v1/
 
 node ~/.codex/usdd-skills/scripts/mcp_server.mjs --list-tools
-# Should print 4 analytics tools
+# Should print 14 analytics tools
 ```
 
 ## Available Skills
@@ -69,7 +69,7 @@ node ~/.codex/usdd-skills/scripts/mcp_server.mjs --list-tools
 | `usdd-vault-v1` | Open vaults, mint USDD, repay, withdraw, close. Requires official MCP. |
 | `usdd-psm-v1` | Swap stablecoins ↔ USDD via PSM. Requires official MCP. |
 | `usdd-earn-v1` | Deposit USDD to Earn, redeem sUSDD. Requires official MCP. |
-| `usdd-analytics-v1` | Historical analytics. Uses this repo's local MCP only. |
+| `usdd-analytics-v1` | Public read-only USDD API analytics. Uses this repo's local MCP only. |
 
 ## Updating
 

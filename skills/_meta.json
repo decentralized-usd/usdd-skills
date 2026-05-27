@@ -32,7 +32,7 @@
     {
       "id": "usdd-analytics-v1",
       "name": "USDD Analytics",
-      "description": "Supported analytics: Earn APY, sUSDD supply, total supply, and supply history via the local analytics MCP"
+      "description": "Public read-only USDD API analytics: supply, APY, collateral, Vault configuration, per-chain history, and Smart Allocator detail"
     }
   ]
 }
