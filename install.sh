@@ -21,6 +21,10 @@ fi
 echo "Installing dependencies..."
 npm install
 
+# Install official MCP binary for wallet state and writes
+echo "Installing official USDD MCP..."
+npm install -g @usdd/mcp-server-usdd
+
 # Create .env if it doesn't exist
 if [ ! -f .env ]; then
     cp .env.example .env
@@ -29,6 +33,11 @@ if [ ! -f .env ]; then
 else
     echo ".env file already exists, skipping."
 fi
+
+# Configure local checkout as the analytics MCP source.
+echo ""
+echo "Configuring USDD MCP clients from this checkout..."
+node bin/usdd-skills.mjs setup --local-source --skip-global-install --yes
 
 echo ""
 echo "Installation complete!"
@@ -40,6 +49,3 @@ echo "  node scripts/usdd_api.mjs total-supply          # CLI smoke test"
 echo ""
 echo "This repo's analytics MCP path:"
 echo "  node $(pwd)/scripts/mcp_server.mjs"
-echo ""
-echo "For write operations, also install the official MCP:"
-echo "  npm install -g @usdd/mcp-server-usdd"

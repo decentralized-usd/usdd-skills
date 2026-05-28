@@ -13,7 +13,7 @@
       "name": "usdd-skills",
       "source": "./",
       "description": "USDD skills — open vaults, mint USDD, swap via PSM, deposit into Earn, query protocol analytics.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": { "name": "decentralized-usd" },
       "license": "MIT",
       "keywords": [

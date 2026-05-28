@@ -1,18 +1,50 @@
 {
   "name": "@usdd/usdd-skills",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI Agent skills for USDD — query analytics, mint, swap, earn via natural language. Pairs with @usdd/mcp-server-usdd.",
   "main": "scripts/mcp_server.mjs",
   "type": "module",
+  "bin": {
+    "usdd-skills": "bin/usdd-skills.mjs"
+  },
+  "files": [
+    "bin/",
+    "scripts/",
+    "skills/",
+    "docs/api-reference.md",
+    "docs/earn-guide.md",
+    "docs/psm-guide.md",
+    "docs/vault-guide.md",
+    ".claude-plugin/",
+    ".cursor-plugin/",
+    ".opencode/",
+    ".codex/INSTALL.md",
+    ".env.example",
+    ".mcp.json",
+    "install.sh",
+    "uninstall.sh",
+    "SKILL.md"
+  ],
   "scripts": {
     "start": "node scripts/mcp_server.mjs",
-    "test": "node --test scripts/usdd_api.test.mjs",
+    "test": "node --test scripts/*.test.mjs",
     "smoke": "node scripts/usdd_api.mjs total-supply",
     "mcp:list-tools": "node scripts/mcp_server.mjs --list-tools"
   },
   "keywords": [
-    "mcp", "model-context-protocol", "usdd", "tron", "ethereum", "bsc",
-    "defi", "stablecoin", "vault", "psm", "savings", "ai-agent", "skills"
+    "mcp",
+    "model-context-protocol",
+    "usdd",
+    "tron",
+    "ethereum",
+    "bsc",
+    "defi",
+    "stablecoin",
+    "vault",
+    "psm",
+    "savings",
+    "ai-agent",
+    "skills"
   ],
   "author": "USDD",
   "license": "MIT",

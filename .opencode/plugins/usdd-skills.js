@@ -4,7 +4,7 @@
 export default {
   name: "usdd-skills",
   description: "AI Agent skills for USDD — vault, PSM, savings, analytics.",
-  version: "1.0.0",
+  version: "1.0.1",
   skills: [
     "./skills/usdd-vault-v1",
     "./skills/usdd-psm-v1",

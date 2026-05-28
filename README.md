@@ -32,7 +32,24 @@ Skills route automatically. Write operations always go through the official MCP.
 
 ## Quick Start
 
-### 1. Install this repo's analytics MCP
+### Recommended: one-command setup
+
+```bash
+npx @usdd/usdd-skills setup --yes
+```
+
+The setup command installs the durable `usdd-skills` and `mcp-server-usdd` binaries, writes MCP client config with backups, creates the skills symlink, and configures these MCP servers:
+
+- `usdd-analytics` -> `usdd-skills mcp-server`
+- `usdd-full` -> `mcp-server-usdd`
+
+To choose clients explicitly:
+
+```bash
+usdd-skills setup --client claude-desktop,cursor,codex --yes
+```
+
+### Local checkout setup
 
 ```bash
 git clone https://github.com/decentralized-usd/usdd-skills
@@ -40,18 +57,14 @@ cd usdd-skills
 bash install.sh
 ```
 
-### 2. Install the official MCP (for writes)
+`install.sh` uses the current checkout as the analytics MCP source and configures detected clients.
 
-```bash
-npm install -g @usdd/mcp-server-usdd
-```
-
-### 3. Run
+### Verify
 
 **Analytics MCP smoke:**
 ```bash
-npm run mcp:list-tools         # List the 14 analytics tools
-node scripts/usdd_api.mjs      # CLI usage
+usdd-skills list-tools         # List the 14 analytics tools
+node scripts/usdd_api.mjs      # CLI usage from a local checkout
 ```
 
 **Unit tests:**
@@ -69,8 +82,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "usdd-analytics": {
-      "command": "node",
-      "args": ["/ABS_PATH/usdd-skills/scripts/mcp_server.mjs"]
+      "command": "usdd-skills",
+      "args": ["mcp-server"]
     },
     "usdd-full": {
       "command": "mcp-server-usdd",
@@ -93,7 +106,7 @@ Add to `.cursor/mcp.json` — same structure as above.
 Register project-scoped MCP servers:
 
 ```bash
-claude mcp add -s project usdd-analytics -- node /ABS_PATH/usdd-skills/scripts/mcp_server.mjs
+claude mcp add -s project usdd-analytics -- usdd-skills mcp-server
 claude mcp add -s project usdd-full -- mcp-server-usdd
 ```
 

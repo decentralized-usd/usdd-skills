@@ -4,9 +4,19 @@
 
 - Node.js v20+
 - Git
-- `@usdd/mcp-server-usdd` (for writes — install separately)
+- `npx` or npm v10+
 
 ## Installation
+
+### Recommended
+
+```bash
+npx @usdd/usdd-skills setup --client codex --yes
+```
+
+The setup command installs durable `usdd-skills` and `mcp-server-usdd` binaries, writes Codex MCP config with a timestamped backup, and creates the skills symlink.
+
+### Manual/local checkout
 
 1. **Clone this repo:**
 
@@ -16,27 +26,14 @@
    bash install.sh
    ```
 
-2. **Install the official MCP for write operations:**
-
-   ```bash
-   npm install -g @usdd/mcp-server-usdd
-   ```
-
-3. **Create skills symlink:**
-
-   ```bash
-   mkdir -p ~/.agents/skills
-   ln -s ~/.codex/usdd-skills/skills ~/.agents/skills/usdd-skills
-   ```
-
-4. **Register both MCP servers in your Codex config:**
+2. **Manual config shape if you do not use `install.sh`:**
 
    ```jsonc
    {
      "mcpServers": {
        "usdd-analytics": {
-         "command": "node",
-         "args": ["~/.codex/usdd-skills/scripts/mcp_server.mjs"]
+         "command": "usdd-skills",
+         "args": ["mcp-server"]
        },
        "usdd-full": {
          "command": "mcp-server-usdd",
@@ -50,7 +47,7 @@
    }
    ```
 
-5. **Restart Codex** to discover the skills.
+3. **Restart Codex** to discover the skills.
 
 ## Verify
 
@@ -58,7 +55,7 @@
 ls ~/.agents/skills/usdd-skills
 # Should list: usdd-vault-v1/ usdd-psm-v1/ usdd-earn-v1/ usdd-analytics-v1/
 
-node ~/.codex/usdd-skills/scripts/mcp_server.mjs --list-tools
+usdd-skills list-tools
 # Should print 14 analytics tools
 ```
 
@@ -74,13 +71,16 @@ node ~/.codex/usdd-skills/scripts/mcp_server.mjs --list-tools
 ## Updating
 
 ```bash
-cd ~/.codex/usdd-skills && git pull && npm install
+npm install -g @usdd/usdd-skills@latest @usdd/mcp-server-usdd@latest
+usdd-skills setup --client codex --yes
 ```
+
+For a local checkout, run `cd ~/.codex/usdd-skills && git pull && bash install.sh`.
 
 ## Uninstalling
 
 ```bash
 rm ~/.agents/skills/usdd-skills
 rm -rf ~/.codex/usdd-skills
-npm uninstall -g @usdd/mcp-server-usdd
+npm uninstall -g @usdd/usdd-skills @usdd/mcp-server-usdd
 ```
