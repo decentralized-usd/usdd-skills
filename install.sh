@@ -25,7 +25,7 @@ npm install
 if [ ! -f .env ]; then
     cp .env.example .env
     echo ""
-    echo "Created .env from .env.example. Default NETWORK=mainnet."
+    echo "Created .env from .env.example. No analytics MCP network env is required."
 else
     echo ".env file already exists, skipping."
 fi

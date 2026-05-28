@@ -26,9 +26,9 @@ Skills route automatically. Write operations always go through the official MCP.
 
 ## Supported Networks
 
-- TRON mainnet / Nile testnet
-- Ethereum mainnet
-- BSC mainnet
+- TRON mainnet / Nile testnet: `tron`, `tron_nile`
+- Ethereum mainnet / Sepolia testnet: `eth`, `eth_sepolia`
+- BSC mainnet / BSC testnet: `bsc`, `bsc_testnet`
 
 ## Quick Start
 
@@ -144,7 +144,7 @@ For Vault / PSM / Earn / balance / allowance / protocol-overview / treasury / Sm
 - Writes are delegated to `@usdd/mcp-server-usdd`, which manages wallets and chain RPCs in its own env.
 - All write skills mandate a non-skippable chat-layer confirmation before invoking the underlying single-step write tool.
 - Vault writes additionally mandate a risk-summary precheck (collateral ratio / liquidation price / risk tier).
-- Use Nile testnet (`NETWORK=nile`) for all dry runs before mainnet.
+- Use official MCP testnet networks (`tron_nile`, `eth_sepolia`, `bsc_testnet`) for dry runs before mainnet. This repo's analytics MCP does not use `NETWORK`.
 
 ## License
 
