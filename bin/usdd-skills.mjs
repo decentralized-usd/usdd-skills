@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseClientList, runSetup } from '../scripts/setup_installer.mjs';
+import { DEFAULT_PACKAGE_SOURCE, parseClientList, runSetup } from '../scripts/setup_installer.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -21,9 +21,10 @@ Setup options:
   --dry-run                 Show planned writes without changing files
   --skip-global-install     Do not npm install global packages
   --local-source            Configure analytics MCP from this checkout instead of usdd-skills binary
+  --package-source <spec>   Install usdd-skills globally from an npm package or git URL
 
 Examples:
-  npx @usdd/usdd-skills setup --yes
+  npx --yes --package=git+https://github.com/decentralized-usd/usdd-skills.git usdd-skills setup --yes
   usdd-skills setup --client claude-desktop,cursor --yes
   node bin/usdd-skills.mjs setup --local-source --skip-global-install --client project --yes
 `);
@@ -37,6 +38,7 @@ function parseArgs(argv) {
     dryRun: false,
     skipGlobalInstall: false,
     localSource: false,
+    packageSource: DEFAULT_PACKAGE_SOURCE,
   };
 
   for (let i = 1; i < argv.length; i += 1) {
@@ -45,6 +47,13 @@ function parseArgs(argv) {
     else if (arg === '--dry-run') options.dryRun = true;
     else if (arg === '--skip-global-install') options.skipGlobalInstall = true;
     else if (arg === '--local-source') options.localSource = true;
+    else if (arg === '--package-source') {
+      i += 1;
+      if (!argv[i]) throw new Error('--package-source requires a value');
+      options.packageSource = argv[i];
+    } else if (arg.startsWith('--package-source=')) {
+      options.packageSource = arg.slice('--package-source='.length);
+    }
     else if (arg === '--client') {
       i += 1;
       if (!argv[i]) throw new Error('--client requires a value');

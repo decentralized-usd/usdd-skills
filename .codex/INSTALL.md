@@ -11,17 +11,21 @@
 ### Recommended
 
 ```bash
-npx @usdd/usdd-skills setup --client codex --yes
+npx --yes \
+  --package=git+https://github.com/decentralized-usd/usdd-skills.git \
+  usdd-skills setup --client codex --yes
 ```
 
 The setup command installs durable `usdd-skills` and `mcp-server-usdd` binaries, writes Codex MCP config with a timestamped backup, and creates the skills symlink.
+
+Before the public GitHub release, internal testers should run `bash install.sh` from an existing local checkout. If `@usdd/usdd-skills` is published to npm later, the shorter equivalent command will be `npx @usdd/usdd-skills setup --client codex --yes`.
 
 ### Manual/local checkout
 
 1. **Clone this repo:**
 
    ```bash
-   git clone https://github.com/decentralized-usd/usdd-skills ~/.codex/usdd-skills
+   git clone https://github.com/decentralized-usd/usdd-skills.git ~/.codex/usdd-skills
    cd ~/.codex/usdd-skills
    bash install.sh
    ```
@@ -71,11 +75,10 @@ usdd-skills list-tools
 ## Updating
 
 ```bash
-npm install -g @usdd/usdd-skills@latest @usdd/mcp-server-usdd@latest
 usdd-skills setup --client codex --yes
 ```
 
-For a local checkout, run `cd ~/.codex/usdd-skills && git pull && bash install.sh`.
+The setup command updates the GitHub-installed `usdd-skills` package and the npm-published official MCP. For a local checkout, run `cd ~/.codex/usdd-skills && git pull && bash install.sh`.
 
 ## Uninstalling
 

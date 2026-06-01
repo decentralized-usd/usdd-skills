@@ -143,3 +143,26 @@ test('runSetup dry-run skips npm install and reports project config', async () =
   assert.equal(result.results[0].filePath, path.join(cwd, '.mcp.json'));
   assert.equal(result.results[0].dryRun, true);
 });
+
+test('runSetup installs the requested git package source', async () => {
+  const root = await tempDir();
+  const calls = [];
+  const packageSource = 'git+https://github.com/decentralized-usd/usdd-skills.git';
+  await runSetup({
+    clients: ['project'],
+    yes: true,
+    localSource: true,
+    packageSource,
+    cwd: root,
+    home: root,
+    skillsTargetPath: path.join(root, '.agents', 'skills', 'usdd-skills'),
+    run: async (command, args) => {
+      calls.push([command, args]);
+    },
+    log: () => {},
+  });
+
+  assert.deepEqual(calls, [
+    ['npm', ['install', '-g', packageSource, '@usdd/mcp-server-usdd']],
+  ]);
+});

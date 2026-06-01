@@ -1,6 +1,6 @@
 {
   "name": "@usdd/usdd-skills",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "AI Agent skills for USDD — query analytics, mint, swap, earn via natural language. Pairs with @usdd/mcp-server-usdd.",
   "main": "scripts/mcp_server.mjs",
   "type": "module",

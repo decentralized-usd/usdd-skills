@@ -11,6 +11,7 @@ export const REPO_ROOT = path.resolve(__dirname, '..');
 export const JSON_CLIENTS = new Set(['project', 'claude-desktop', 'cursor', 'codex']);
 export const ALL_CLIENTS = ['project', 'claude-desktop', 'cursor', 'codex'];
 export const RPC_ENV_KEYS = ['TRONGRID_API_KEY', 'ETH_RPC_URL', 'BSC_RPC_URL'];
+export const DEFAULT_PACKAGE_SOURCE = 'git+https://github.com/decentralized-usd/usdd-skills.git';
 
 export function checkNodeVersion(version = process.versions.node) {
   const major = Number(String(version).split('.')[0]);
@@ -217,10 +218,12 @@ export async function runSetup({
   dryRun = false,
   skipGlobalInstall = false,
   localSource = false,
+  packageSource = DEFAULT_PACKAGE_SOURCE,
   home = os.homedir(),
   platform = process.platform,
   cwd = process.cwd(),
   env = process.env,
+  skillsTargetPath = path.join(home, '.agents', 'skills', 'usdd-skills'),
   run = runCommand,
   log = console.log,
 } = {}) {
@@ -240,7 +243,7 @@ export async function runSetup({
   }
 
   if (!skipGlobalInstall && !dryRun) {
-    await run('npm', ['install', '-g', '@usdd/usdd-skills', '@usdd/mcp-server-usdd']);
+    await run('npm', ['install', '-g', packageSource, '@usdd/mcp-server-usdd']);
   }
 
   const useLocalSource = localSource || skipGlobalInstall;
@@ -261,7 +264,7 @@ export async function runSetup({
   if (!useLocalSource && !dryRun) {
     sourceSkillsDir = path.join(await resolveGlobalPackageRoot('@usdd/usdd-skills'), 'skills');
   }
-  results.push(await createSkillsSymlink({ sourceSkillsDir, dryRun }));
+  results.push(await createSkillsSymlink({ sourceSkillsDir, targetPath: skillsTargetPath, dryRun }));
 
   return {
     clients: selectedClients,

@@ -7,7 +7,7 @@ import {
 import { USDDClient } from "./usdd_api.mjs";
 
 const server = new Server(
-  { name: "usdd-analytics-mcp", version: "1.0.1" },
+  { name: "usdd-analytics-mcp", version: "1.0.0" },
   { capabilities: { tools: {} } }
 );
 
