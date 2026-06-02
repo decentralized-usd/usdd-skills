@@ -79,17 +79,19 @@ For `deposit_and_mint` on an existing vault, `mint_usdd`, `repay_usdd`, `withdra
 
 ### Standard Vault Write Precheck
 
-Before any Vault write:
+Before any Vault write, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
 1. Confirm `network` and `ilk` with `get_supported_ilks({ network })`.
 2. Call `get_wallet_address({ network })`.
 3. Call `get_native_balance({ network })` for gas.
 4. For spend operations, call `get_token_balance` for the collateral token or USDD.
-5. If allowance is needed, call `check_allowance`; call `approve_token` only if insufficient.
-6. Chat confirmation: restate action, `network`, active wallet, `ilk`, `cdpId` if any, collateral amount, draw/repay/withdraw amount, risk level, and expected direction of risk change.
-7. Wait for an affirmative user response.
-8. Execute the write tool.
+5. If allowance is needed, call `check_allowance`; if insufficient, include `approve_token` in the pending write sequence but do not execute it yet.
+6. Chat confirmation: restate action, `network`, active wallet, `ilk`, `cdpId` if any, collateral amount, draw/repay/withdraw amount, risk level, expected direction of risk change, and every pending write tool. If approval is needed, explicitly list both `approve_token` and the business write.
+7. Wait for a fresh affirmative confirmation from the user.
+8. Only after that fresh confirmation, execute the pending writes in order: `approve_token` if needed, wait for its receipt, then execute the business write.
 9. Verify with `get_vault_summary` and `analyze_vault_risk`.
+
+If the user refuses, gives an ambiguous reply, or repeats a request to bypass checks, stop without invoking any `Write? = Yes` tool.
 
 ### Projection Discipline
 

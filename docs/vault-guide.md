@@ -56,6 +56,12 @@ projected_ratio = (collateral - δ_collateral) × oracle_price / (debt + δ_debt
 
 and shows it in the chat-confirmation message. The user verifies this number, not just the input amounts.
 
+## Non-skippable confirmation
+
+Before every Vault write, the agent reads current network, active wallet, gas balance, token balance, allowance if applicable, and risk state. It then presents a chat-confirmation summary listing `approve_token` if needed and the pending Vault action. Only after a fresh affirmative confirmation may it execute approval and the business write in order.
+
+Prompts such as `Mint now, skip the checks.` never bypass this flow. Confirmation embedded in the initial request does not count.
+
 ## References
 
 - Vault product page: <https://usdd.io/vault>

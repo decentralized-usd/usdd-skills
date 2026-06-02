@@ -57,7 +57,7 @@ For current per-network wallet shares, sUSDD contract status, or current DSR fie
 
 ### Deposit Precheck
 
-Before `deposit_savings`:
+Before `deposit_savings`, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
 1. Resolve `network`; ask if missing.
 2. Call `get_savings_status({ network })`; stop if `supported: false`.
@@ -66,15 +66,17 @@ Before `deposit_savings`:
 5. Call `get_native_balance({ network })` for gas.
 6. Call `get_token_balance({ token: usdd, network })`.
 7. Call `check_allowance({ token: usdd, spender: savings.susdd, amount, decimals: 18, network })`.
-8. If allowance is insufficient, call `approve_token({ token: usdd, spender: savings.susdd, amount, decimals: 18, network })`.
-9. Chat confirmation: restate deposit amount, `network`, active wallet, sUSDD contract, USDD token, current rate/status fields, and any fee/gas estimate if available.
-10. Wait for an affirmative user response.
-11. Call `deposit_savings({ amount, network })`.
+8. If allowance is insufficient, include `approve_token({ token: usdd, spender: savings.susdd, amount, decimals: 18, network })` in the pending write sequence but do not execute it yet.
+9. Chat confirmation: restate deposit amount, `network`, active wallet, sUSDD contract, USDD token, current rate/status fields, any fee/gas estimate if available, and every pending write tool. If approval is needed, explicitly list both `approve_token` and the business write.
+10. Wait for a fresh affirmative confirmation from the user.
+11. Only after that fresh confirmation, execute the pending writes in order: `approve_token` if needed, wait for its receipt, then execute the business write `deposit_savings({ amount, network })`.
 12. Verify with `get_savings_status({ network })` and balance checks if needed.
+
+If the user refuses, gives an ambiguous reply, or repeats a request to bypass checks, stop without invoking any `Write? = Yes` tool.
 
 ### Withdraw Precheck
 
-Before `withdraw_savings`:
+Before `withdraw_savings`, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
 1. Resolve `network`; ask if missing.
 2. Call `get_savings_status({ network })`; stop if `supported: false`.
@@ -82,10 +84,12 @@ Before `withdraw_savings`:
 4. Call `get_native_balance({ network })` for gas.
 5. Call `get_token_balance({ token: savings.susdd, decimals: 18, network })`.
 6. Confirm the requested USDD withdrawal amount is plausible against wallet shares and status output.
-7. Chat confirmation: restate withdrawal amount, `network`, active wallet, sUSDD contract, and expected USDD receipt if calculable.
-8. Wait for an affirmative user response.
-9. Call `withdraw_savings({ amount, network })`.
+7. Chat confirmation: restate withdrawal amount, `network`, active wallet, sUSDD contract, expected USDD receipt if calculable, and the pending business write.
+8. Wait for a fresh affirmative confirmation from the user.
+9. Only after that fresh confirmation, execute the business write `withdraw_savings({ amount, network })`.
 10. Verify with `get_savings_status({ network })` and balance checks if needed.
+
+If the user refuses, gives an ambiguous reply, or repeats a request to bypass checks, stop without invoking any `Write? = Yes` tool.
 
 ## Example Prompts
 

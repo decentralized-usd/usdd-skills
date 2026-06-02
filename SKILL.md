@@ -59,19 +59,21 @@ TRON operations may return a STOP message requiring signing-mode confirmation. I
 
 ### Standard Asset-Write Precheck
 
-Before invoking Vault, PSM, or Savings write tools, run:
+Before invoking Vault, PSM, or Savings write tools, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
 1. Resolve `network` and required market/ilk/token addresses.
 2. Call `get_wallet_address({ network })` to confirm the active wallet.
 3. Check native gas balance with `get_native_balance({ network })`.
 4. Check input-token balance with `get_token_balance` when the operation spends ERC20/TRC20 tokens.
 5. Check allowance with `check_allowance` when a protocol contract pulls ERC20/TRC20 tokens.
-6. If allowance is insufficient, call `approve_token` for the exact protocol spender and wait for confirmation.
-7. Chat confirmation: restate action, amount, fee or risk fields, `network`, protocol contract/spender, and active wallet address. Wait for an affirmative user response.
-8. Execute the official write tool.
+6. If allowance is insufficient, include `approve_token` for the exact protocol spender in the pending write sequence. Do not execute it yet.
+7. Chat confirmation: restate action, amount, fee or risk fields, `network`, protocol contract/spender, active wallet address, and every pending write tool. If approval is needed, explicitly list both `approve_token` and the business write. Wait for a fresh affirmative confirmation from the user.
+8. Only after that fresh confirmation, execute the pending writes in order: `approve_token` if needed, wait for its receipt, then execute the business write.
 9. Run the relevant post-write read (`get_vault_summary`, `get_psm_status`, `get_savings_status`, or balance checks) and summarize the result.
 
 PSM spender exception: for `psm_swap_to_usdd`, approve the market gem token to the market `gemJoin` address, not the PSM contract. For `psm_swap_from_usdd`, approve USDD to the PSM contract.
+
+If the user refuses, gives an ambiguous reply, or repeats a request to bypass checks, stop without invoking any `Write? = Yes` tool. This gate applies to both `approve_token` and the business write.
 
 This flow does not apply to wallet/network administration tools such as `set_network`, `connect_browser_wallet`, `set_wallet_mode`, `import_wallet`, or `set_active_wallet`; those still require clear user intent before use. The official MCP write tools for Vault, PSM, and Savings are single-call. Chat-layer confirmation is therefore mandatory. Token transfer is the exception: it has its own MCP-level `prepare_token_transfer` -> user confirmation -> `confirm_token_transfer` flow.
 

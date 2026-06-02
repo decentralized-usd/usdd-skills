@@ -159,7 +159,7 @@ For Vault / PSM / Earn / balance / allowance / protocol-overview / treasury / Sm
   → analytics MCP `get_earn_apy` → AI compares TRON / ETH / BSC
 
 - **"Deposit 1000 USDD on Ethereum into Earn."**
-  → official MCP balance / allowance / approve_token → chat confirmation → `deposit_savings`
+  → official MCP balance / allowance checks → chat confirmation listing `approve_token` if needed and `deposit_savings` → fresh user confirmation → execute pending writes
 
 - **"What's my vault #42 health?"**
   → official MCP `analyze_vault_risk` → 3-line risk summary (ratio / liquidation price / tier)
@@ -171,7 +171,8 @@ For Vault / PSM / Earn / balance / allowance / protocol-overview / treasury / Sm
 
 - This repo's MCP is **read-only**. No transaction signing, no private keys.
 - Writes are delegated to `@usdd/mcp-server-usdd`, which manages wallets and chain RPCs in its own env.
-- All write skills mandate a non-skippable chat-layer confirmation before invoking the underlying single-step write tool.
+- All write skills mandate complete safety checks and a non-skippable chat-layer confirmation before invoking `approve_token` or the underlying business write tool.
+- Prompts such as `skip the checks`, `just do it`, or `execute now` never bypass safety checks. Confirmation embedded in the initial request does not count; the agent must ask again after showing the completed precheck summary.
 - Vault writes additionally mandate a risk-summary precheck (collateral ratio / liquidation price / risk tier).
 - Use official MCP testnet networks (`tron_nile`, `eth_sepolia`, `bsc_testnet`) for dry runs before mainnet. This repo's analytics MCP does not use `NETWORK`.
 

@@ -69,7 +69,7 @@ The official tools expose enablement and route availability. They do not guarant
 
 ### Write Precheck
 
-Before either PSM swap:
+Before either PSM swap, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
 1. Resolve `network` and `market`; verify the market exists.
 2. Call `get_wallet_address({ network })`.
@@ -84,13 +84,15 @@ Before either PSM swap:
 7. Call `get_native_balance({ network })` for gas.
 8. Call `get_token_balance` for the input token.
 9. Call `check_allowance` for the input token and resolved spender.
-10. If allowance is insufficient, call `approve_token` for the resolved spender.
-11. Chat confirmation: restate direction, `network`, `market`, input amount, expected output/net amount after fee if calculable, fee percent, PSM contract, token spender, and active wallet.
-12. Wait for an affirmative user response.
-13. Execute `psm_swap_to_usdd` or `psm_swap_from_usdd`.
+10. If allowance is insufficient, include `approve_token` for the resolved spender in the pending write sequence but do not execute it yet.
+11. Chat confirmation: restate direction, `network`, `market`, input amount, expected output/net amount after fee if calculable, fee percent, PSM contract, token spender, active wallet, and every pending write tool. If approval is needed, explicitly list both `approve_token` and the business write.
+12. Wait for a fresh affirmative confirmation from the user.
+13. Only after that fresh confirmation, execute the pending writes in order: `approve_token` if needed, wait for its receipt, then execute the business write.
 14. Verify by re-checking balances or `get_psm_status`.
 
 If any token address, spender, or decimals cannot be resolved from official MCP outputs, stop and explain the missing field. Do not guess contract addresses.
+
+If the user refuses, gives an ambiguous reply, or repeats a request to bypass checks, stop without invoking any `Write? = Yes` tool.
 
 ## Example Prompts
 
