@@ -88,12 +88,12 @@ export class USDDClient {
 
   async getCirculatingSupply() {
     const raw = await this._fetchWithRetry('/circulatingSupply');
-    return this._withMeta({ value: typeof raw === 'number' ? raw : Number(raw) });
+    return this._withMeta({ value: parseSupplyNumber(raw, '/circulatingSupply') });
   }
 
   async getTotalSupply() {
     const raw = await this._fetchWithRetry('/totalSupply');
-    return this._withMeta({ value: typeof raw === 'number' ? raw : Number(raw) });
+    return this._withMeta({ value: parseSupplyNumber(raw, '/totalSupply') });
   }
 
   async getPublicProtocolOverview() {
@@ -167,6 +167,17 @@ function normalizeInterval(interval) {
     throw new TypeError(`interval must be one of: ${Array.from(SUPPORTED_INTERVALS).join(', ')}`);
   }
   return normalized;
+}
+
+function parseSupplyNumber(raw, endpoint) {
+  const value = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(value)) {
+    throw new USDDApiError(
+      `openapi.usdd.io invalid numeric response on ${endpoint}`,
+      { endpoint }
+    );
+  }
+  return value;
 }
 
 async function main() {

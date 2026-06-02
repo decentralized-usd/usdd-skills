@@ -137,6 +137,34 @@ test('USDDClient.getTotalSupply fetches /totalSupply as number', async () => {
   assert.equal(data._meta.source, 'openapi.usdd.io');
 });
 
+test('USDDClient.getTotalSupply rejects upstream error text instead of returning NaN', async () => {
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/totalSupply');
+    return { ok: true, status: 200, json: async () => 'Internal Server Error' };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  await assert.rejects(
+    () => client.getTotalSupply(),
+    (err) => err instanceof USDDApiError
+      && err.endpoint === '/totalSupply'
+      && err.message.includes('invalid numeric response')
+  );
+});
+
+test('USDDClient.getCirculatingSupply rejects non-finite values', async () => {
+  const fakeFetch = async (url) => {
+    assert.equal(url, 'https://openapi.usdd.io/circulatingSupply');
+    return { ok: true, status: 200, json: async () => 'Infinity' };
+  };
+  const client = new USDDClient({ fetchImpl: fakeFetch });
+  await assert.rejects(
+    () => client.getCirculatingSupply(),
+    (err) => err instanceof USDDApiError
+      && err.endpoint === '/circulatingSupply'
+      && err.message.includes('invalid numeric response')
+  );
+});
+
 test('USDDClient public overview helpers fetch documented paths', async () => {
   const calls = [];
   const fakeFetch = async (url) => {
