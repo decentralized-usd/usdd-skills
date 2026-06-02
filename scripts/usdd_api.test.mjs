@@ -41,6 +41,51 @@ test('USDDClient._fetchWithRetry throws USDDApiError after 3 failures', async ()
   );
 });
 
+test('USDDClient._fetchWithRetry times out hanging fetch attempts and retries', async () => {
+  const signals = [];
+  const fakeFetch = async (_url, { signal }) => {
+    signals.push(signal);
+    return new Promise(() => {});
+  };
+  const client = new USDDClient({
+    fetchImpl: fakeFetch,
+    sleepImpl: async () => {},
+    requestTimeoutMs: 5,
+  });
+  await assert.rejects(
+    () => client._fetchWithRetry('/slow'),
+    (err) => err instanceof USDDApiError
+      && err.endpoint === '/slow'
+      && err.message.includes('timed out after 5ms')
+  );
+  assert.equal(signals.length, 3);
+  assert.ok(signals.every((signal) => signal.aborted));
+});
+
+test('USDDClient._fetchWithRetry times out hanging JSON parsing and retries', async () => {
+  let calls = 0;
+  const fakeFetch = async () => {
+    calls += 1;
+    return {
+      ok: true,
+      status: 200,
+      json: async () => new Promise(() => {}),
+    };
+  };
+  const client = new USDDClient({
+    fetchImpl: fakeFetch,
+    sleepImpl: async () => {},
+    requestTimeoutMs: 5,
+  });
+  await assert.rejects(
+    () => client._fetchWithRetry('/slow-json'),
+    (err) => err instanceof USDDApiError
+      && err.endpoint === '/slow-json'
+      && err.message.includes('timed out after 5ms')
+  );
+  assert.equal(calls, 3);
+});
+
 test('USDDClient._fetchWithRetry treats non-zero API code as an error', async () => {
   const fakeFetch = async () => ({
     ok: true,

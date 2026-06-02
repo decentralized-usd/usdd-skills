@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 dotenv.config();
 
 const API_HOST = 'https://openapi.usdd.io';
+const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
 const SUPPORTED_CHAINS = new Set(['tron', 'eth', 'bsc']);
 const SUPPORTED_INTERVALS = new Set(['WEEKLY', 'MONTHLY', 'BIANNUAL', 'ANNUAL']);
 
@@ -17,10 +18,19 @@ export class USDDApiError extends Error {
 }
 
 export class USDDClient {
-  constructor({ baseUrl = API_HOST, fetchImpl, sleepImpl } = {}) {
+  constructor({
+    baseUrl = API_HOST,
+    fetchImpl,
+    sleepImpl,
+    requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  } = {}) {
+    if (!Number.isFinite(requestTimeoutMs) || requestTimeoutMs <= 0) {
+      throw new TypeError('requestTimeoutMs must be a positive finite number');
+    }
     this.baseUrl = baseUrl;
     this.fetchImpl = fetchImpl || globalThis.fetch;
     this.sleepImpl = sleepImpl || ((ms) => new Promise((r) => setTimeout(r, ms)));
+    this.requestTimeoutMs = requestTimeoutMs;
   }
 
   async _fetchWithRetry(path) {
@@ -30,7 +40,7 @@ export class USDDClient {
     for (const delay of delays) {
       if (delay > 0) await this.sleepImpl(delay);
       try {
-        const resp = await this.fetchImpl(url);
+        const { resp, json } = await this._fetchJsonWithTimeout(url, path);
         if (!resp.ok) {
           lastErr = new USDDApiError(
             `openapi.usdd.io ${resp.status} on ${path}`,
@@ -38,7 +48,6 @@ export class USDDClient {
           );
           continue;
         }
-        const json = await resp.json();
         if (json && typeof json === 'object' && 'code' in json && json.code !== 0) {
           lastErr = new USDDApiError(
             `openapi.usdd.io business error ${json.code} on ${path}: ${json.message || 'Unknown error'}`,
@@ -59,6 +68,36 @@ export class USDDClient {
       }
     }
     throw lastErr;
+  }
+
+  async _fetchJsonWithTimeout(url, path) {
+    const controller = new AbortController();
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        const error = new USDDApiError(
+          `openapi.usdd.io timed out after ${this.requestTimeoutMs}ms on ${path}`,
+          { endpoint: path }
+        );
+        reject(error);
+        controller.abort(error);
+      }, this.requestTimeoutMs);
+    });
+
+    try {
+      return await Promise.race([
+        (async () => {
+          const resp = await this.fetchImpl(url, { signal: controller.signal });
+          return {
+            resp,
+            json: resp.ok ? await resp.json() : undefined,
+          };
+        })(),
+        timeoutPromise,
+      ]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   async getEarnApy() {
