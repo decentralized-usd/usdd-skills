@@ -15,22 +15,22 @@ No transaction signing is used by this skill.
 
 ## Local Analytics MCP Tools
 
-| Tool | Inputs | Current status | Use for |
-|------|--------|----------------|---------|
-| `get_earn_apy` | — | Verified OK | Cross-chain Earn APY |
-| `get_usdd_supply` | — | Verified OK | USDD supply breakdown |
-| `get_susdd_supply` | — | Verified OK | sUSDD supply breakdown |
-| `get_total_supply` | — | Verified OK | Raw USDD total supply |
-| `get_circulating_supply` | — | Verified OK | Raw circulating supply |
-| `get_supply_history` | — | Verified OK | Historical USDD/sUSDD supply |
-| `get_collateral_history` | — | Verified OK | Protocol-wide collateral value history by chain |
-| `get_public_protocol_overview` | — | Verified OK | Public REST protocol overview |
-| `get_public_protocol_overview_info` | — | Verified OK | Public REST overview with 24h changes |
-| `get_public_dsr_apy` | — | Verified OK | DSR APY current / average / history |
-| `get_vault_collaterals` | — | Verified OK | Vault collateral configuration list |
-| `get_latest_collateral` | `chain` | Verified OK | Per-chain collateral snapshot |
-| `get_chain_collateral_history` | `chain`, `interval` | Verified OK | Per-chain historical series |
-| `get_smart_allocator_detail` | — | Verified OK | Smart Allocator allocations and earnings |
+| Tool | Inputs | Description | Write? |
+|------|--------|-------------|--------|
+| `get_earn_apy` | — | Verified cross-chain Earn APY | No |
+| `get_usdd_supply` | — | Verified USDD supply breakdown | No |
+| `get_susdd_supply` | — | Verified sUSDD supply breakdown | No |
+| `get_total_supply` | — | Verified raw USDD total supply | No |
+| `get_circulating_supply` | — | Verified raw circulating supply | No |
+| `get_supply_history` | — | Verified historical USDD/sUSDD supply | No |
+| `get_collateral_history` | — | Verified protocol-wide collateral value history by chain | No |
+| `get_public_protocol_overview` | — | Verified public REST protocol overview | No |
+| `get_public_protocol_overview_info` | — | Verified public REST overview with 24h changes | No |
+| `get_public_dsr_apy` | — | Verified DSR APY current / average / history | No |
+| `get_vault_collaterals` | — | Verified Vault collateral configuration list | No |
+| `get_latest_collateral` | `chain` | Verified per-chain collateral snapshot | No |
+| `get_chain_collateral_history` | `chain`, `interval` | Verified per-chain historical series | No |
+| `get_smart_allocator_detail` | — | Verified Smart Allocator allocations and earnings | No |
 
 Always call these as MCP tools. Do not fetch `openapi.usdd.io` or other upstream URLs directly from the skill workflow. If an MCP tool returns `isError: true`, surface the error message and stop. Do not invent alternate paths.
 
