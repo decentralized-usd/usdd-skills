@@ -144,6 +144,70 @@ test('runSetup dry-run skips npm install and reports project config', async () =
   assert.equal(result.results[0].dryRun, true);
 });
 
+test('runSetup local source writes a portable project config', async () => {
+  const root = await tempDir();
+  const repoRoot = path.join(root, 'checkout');
+  await fs.mkdir(repoRoot);
+  const projectConfig = path.join(root, '.mcp.json');
+
+  const result = await runSetup({
+    clients: ['project'],
+    yes: true,
+    localSource: true,
+    skipGlobalInstall: true,
+    cwd: root,
+    home: root,
+    repoRoot,
+    env: { ETH_RPC_URL: 'https://secret.example' },
+    skillsTargetPath: path.join(root, '.agents', 'skills', 'usdd-skills'),
+    log: () => {},
+  });
+
+  const updated = JSON.parse(await fs.readFile(projectConfig, 'utf8'));
+  assert.deepEqual(updated.mcpServers['usdd-analytics'], {
+    command: 'node',
+    args: ['./checkout/scripts/mcp_server.mjs'],
+  });
+  assert.deepEqual(updated.mcpServers['usdd-full'].env, {
+    ETH_RPC_URL: 'https://secret.example',
+  });
+  assert.equal(JSON.stringify(updated).includes(process.execPath), false);
+  assert.equal(JSON.stringify(updated).includes(root), false);
+  assert.equal(result.results[0].client, 'project');
+  assert.equal(result.results[0].filePath, projectConfig);
+  assert.equal(result.results[0].skipped, undefined);
+});
+
+test('runSetup local source still configures user-level clients', async () => {
+  const root = await tempDir();
+  const repoRoot = path.join(root, 'checkout');
+  const cursorConfig = path.join(root, '.cursor', 'mcp.json');
+
+  const result = await runSetup({
+    clients: ['cursor'],
+    yes: true,
+    localSource: true,
+    skipGlobalInstall: true,
+    cwd: root,
+    home: root,
+    repoRoot,
+    env: { BSC_RPC_URL: 'https://bsc.example' },
+    skillsTargetPath: path.join(root, '.agents', 'skills', 'usdd-skills'),
+    log: () => {},
+  });
+
+  const updated = JSON.parse(await fs.readFile(cursorConfig, 'utf8'));
+  assert.equal(updated.mcpServers['usdd-analytics'].command, process.execPath);
+  assert.deepEqual(updated.mcpServers['usdd-analytics'].args, [
+    path.join(repoRoot, 'scripts', 'mcp_server.mjs'),
+  ]);
+  assert.deepEqual(updated.mcpServers['usdd-full'].env, {
+    BSC_RPC_URL: 'https://bsc.example',
+  });
+  assert.equal(result.results[0].client, 'cursor');
+  assert.equal(result.results[0].filePath, cursorConfig);
+});
+
 test('runSetup installs the requested git package source', async () => {
   const root = await tempDir();
   const calls = [];

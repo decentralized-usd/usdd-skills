@@ -67,7 +67,9 @@ cd usdd-skills
 bash install.sh
 ```
 
-`install.sh` uses the current checkout as the analytics MCP source and configures detected clients.
+`install.sh` uses the current checkout as the analytics MCP source and configures detected clients. The generated project `.mcp.json` is ignored by Git and uses `node` with a relative script path. User-level client configs use absolute local paths so desktop applications do not depend on shell `PATH`.
+
+The tracked `.mcp.json.example` is the portable project template. It intentionally contains no local paths or RPC values.
 
 ### Verify
 
@@ -83,6 +85,10 @@ npm test
 ```
 
 ## Client Configuration
+
+### Project-local config
+
+The setup command generates an ignored `.mcp.json` for the current checkout. Use the tracked `.mcp.json.example` as the portable template and do not commit the generated file.
 
 ### Claude Desktop
 

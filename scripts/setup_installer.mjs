@@ -44,6 +44,15 @@ export function buildMcpServers({
   };
 }
 
+export function localProjectAnalyticsPath({
+  cwd = process.cwd(),
+  repoRoot = REPO_ROOT,
+} = {}) {
+  const relativePath = path.relative(cwd, path.join(repoRoot, 'scripts', 'mcp_server.mjs'));
+  const portablePath = relativePath.split(path.sep).join('/');
+  return portablePath.startsWith('.') ? portablePath : `./${portablePath}`;
+}
+
 export function mergeMcpConfig(existing, servers) {
   return {
     ...existing,
@@ -222,6 +231,7 @@ export async function runSetup({
   home = os.homedir(),
   platform = process.platform,
   cwd = process.cwd(),
+  repoRoot = REPO_ROOT,
   env = process.env,
   skillsTargetPath = path.join(home, '.agents', 'skills', 'usdd-skills'),
   run = runCommand,
@@ -250,17 +260,31 @@ export async function runSetup({
   const servers = useLocalSource
     ? buildMcpServers({
         analyticsCommand: process.execPath,
-        analyticsArgs: [path.join(REPO_ROOT, 'scripts', 'mcp_server.mjs')],
+        analyticsArgs: [path.join(repoRoot, 'scripts', 'mcp_server.mjs')],
         env,
       })
     : buildMcpServers({ env });
+  const projectServers = useLocalSource
+    ? buildMcpServers({
+        analyticsCommand: 'node',
+        analyticsArgs: [localProjectAnalyticsPath({ cwd, repoRoot })],
+        env,
+      })
+    : servers;
 
   const results = [];
   for (const client of selectedClients) {
-    results.push(await configureJsonClient(client, { servers, home, platform, cwd, dryRun }));
+    const clientServers = client === 'project' ? projectServers : servers;
+    results.push(await configureJsonClient(client, {
+      servers: clientServers,
+      home,
+      platform,
+      cwd,
+      dryRun,
+    }));
   }
 
-  let sourceSkillsDir = path.join(REPO_ROOT, 'skills');
+  let sourceSkillsDir = path.join(repoRoot, 'skills');
   if (!useLocalSource && !dryRun) {
     sourceSkillsDir = path.join(await resolveGlobalPackageRoot('@usdd/usdd-skills'), 'skills');
   }

@@ -20,6 +20,8 @@ The setup command installs durable `usdd-skills` and `mcp-server-usdd` binaries,
 
 Before the public GitHub release, internal testers should run `bash install.sh` from an existing local checkout. If `@usdd/usdd-skills` is published to npm later, the shorter equivalent command will be `npx @usdd/usdd-skills setup --client codex --yes`.
 
+Local checkout setup generates an ignored `.mcp.json` with `node` and a relative analytics script path. The tracked `.mcp.json.example` is the portable template; do not commit the generated project config. User-level Codex config continues to use absolute local paths.
+
 ### Manual/local checkout
 
 1. **Clone this repo:**

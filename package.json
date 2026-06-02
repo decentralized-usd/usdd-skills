@@ -20,7 +20,7 @@
     ".opencode/",
     ".codex/INSTALL.md",
     ".env.example",
-    ".mcp.json",
+    ".mcp.json.example",
     "install.sh",
     "uninstall.sh",
     "SKILL.md"
