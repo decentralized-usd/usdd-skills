@@ -105,13 +105,19 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "command": "mcp-server-usdd",
       "env": {
         "TRONGRID_API_KEY": "your_key_optional",
+        "TRON_FULL_NODE": "your_tron_url_optional",
+        "TRON_NILE_FULL_NODE": "your_nile_url_optional",
         "ETH_RPC_URL": "your_url_optional",
-        "BSC_RPC_URL": "your_url_optional"
+        "ETH_SEPOLIA_RPC_URL": "your_sepolia_url_optional",
+        "BSC_RPC_URL": "your_url_optional",
+        "BSC_TESTNET_RPC_URL": "your_bsc_testnet_url_optional"
       }
     }
   }
 }
 ```
+
+`TRONGRID_API_KEY` or a dedicated `TRON_FULL_NODE` is recommended for live TRON reads. Static deployment address lookup uses official MCP `get_protocol_addresses` and does not depend on RPC availability.
 
 ### Cursor
 

@@ -21,7 +21,7 @@ Before any Earn write, call `get_savings_status({ network })`. If it returns `su
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
 | `get_savings_status` (official) | `network?` | Savings support, contract addresses, rate metrics, wallet shares | No |
-| `get_protocol_overview` (official) | `network?` | USDD token address and protocol addresses | No |
+| `get_protocol_addresses` (official) | `network?` | Static USDD token and protocol addresses without RPC reads | No |
 | `get_wallet_address` (official) | `network?` | Active MCP wallet address | No |
 | `get_native_balance` (official) | `owner?`, `network?` | Gas-token balance | No |
 | `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network?` | USDD / sUSDD balance | No |
@@ -40,7 +40,7 @@ Official write tools use the active MCP wallet. They do not accept `from`; call 
 
 | Operation | Token approval needed? | Notes |
 |---|---|---|
-| `deposit_savings` | Yes, USDD -> sUSDD contract | Use USDD address from `get_protocol_overview` and sUSDD address from `get_savings_status().savings.susdd`. |
+| `deposit_savings` | Yes, USDD -> sUSDD contract | Use USDD address from `get_protocol_addresses` and sUSDD address from `get_savings_status().savings.susdd`. |
 | `withdraw_savings` | No allowance | The user spends/burns sUSDD shares via the sUSDD contract. Still requires chat confirmation because it is a write. |
 
 ## Workflow Rules
@@ -61,7 +61,7 @@ Before `deposit_savings`, run every step below in order. **NEVER skip** a safety
 
 1. Resolve `network`; ask if missing.
 2. Call `get_savings_status({ network })`; stop if `supported: false`.
-3. Call `get_protocol_overview({ network })` to get the USDD token address.
+3. Call `get_protocol_addresses({ network })` to get the USDD token address without an RPC read.
 4. Call `get_wallet_address({ network })`.
 5. Call `get_native_balance({ network })` for gas.
 6. Call `get_token_balance({ token: usdd, network })`.

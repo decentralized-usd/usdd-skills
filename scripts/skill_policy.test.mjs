@@ -11,6 +11,11 @@ const writeSkillFiles = [
   'skills/usdd-psm-v1/SKILL.md',
   'skills/usdd-earn-v1/SKILL.md',
 ];
+const addressLookupSkillFiles = [
+  'skills/usdd-vault-v1/SKILL.md',
+  'skills/usdd-psm-v1/SKILL.md',
+  'skills/usdd-earn-v1/SKILL.md',
+];
 
 test('write-capable skills require non-skippable prechecks and fresh confirmation', async () => {
   for (const relativePath of writeSkillFiles) {
@@ -26,6 +31,17 @@ test('write-capable skills require non-skippable prechecks and fresh confirmatio
       skill,
       /approve_token.*business write/i,
       `${relativePath} must gate approve_token and the business write together`
+    );
+  }
+});
+
+test('official write skills use RPC-independent protocol address lookup', async () => {
+  for (const relativePath of addressLookupSkillFiles) {
+    const skill = await fs.readFile(path.join(repoRoot, relativePath), 'utf8');
+    assert.match(
+      skill,
+      /get_protocol_addresses/,
+      `${relativePath} must use static protocol address lookup`
     );
   }
 });

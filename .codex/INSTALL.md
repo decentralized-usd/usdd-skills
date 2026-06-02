@@ -45,8 +45,12 @@ Local checkout setup generates an ignored `.mcp.json` with `node` and a relative
          "command": "mcp-server-usdd",
          "env": {
            "TRONGRID_API_KEY": "<your key, optional>",
-           "ETH_RPC_URL":      "<your url, optional>",
-           "BSC_RPC_URL":      "<your url, optional>"
+           "TRON_FULL_NODE":   "<your TRON mainnet URL, optional>",
+           "TRON_NILE_FULL_NODE": "<your Nile URL, optional>",
+           "ETH_RPC_URL":      "<your Ethereum mainnet URL, optional>",
+           "ETH_SEPOLIA_RPC_URL": "<your Sepolia URL, optional>",
+           "BSC_RPC_URL":      "<your BSC mainnet URL, optional>",
+           "BSC_TESTNET_RPC_URL": "<your BSC testnet URL, optional>"
          }
        }
      }
@@ -64,6 +68,8 @@ ls ~/.agents/skills/usdd-skills
 usdd-skills list-tools
 # Should print 14 analytics tools
 ```
+
+For live TRON reads, configure `TRONGRID_API_KEY` or a dedicated `TRON_FULL_NODE`. Static deployment address lookup uses official MCP `get_protocol_addresses` and does not depend on RPC availability.
 
 ## Available Skills
 

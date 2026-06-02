@@ -23,7 +23,8 @@ Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc
 
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
-| `get_protocol_overview` (official) | `network?` | Protocol addresses, ilks, PSM markets, ceilings | No |
+| `get_protocol_addresses` (official) | `network?` | Static protocol addresses, ilks, and PSM markets without RPC reads | No |
+| `get_protocol_overview` (official) | `network?` | Live protocol ceilings and debt metrics | No |
 | `get_supported_ilks` (official) | `network?` | Configured collateral types and PSM joins for a network | No |
 | `get_oracle_status` (official) | `ilk`, `network?` | Liquidation ratio, penalty, oracle status for an ilk | No |
 | `get_user_vaults` (official) | `address?`, `network?` | Vault/CDP IDs owned by an address or active wallet proxy | No |
@@ -48,7 +49,7 @@ Official write tools use the active MCP wallet. They do not accept `from`; call 
 |---|---|---|
 | Native collateral deposit | No token allowance | Still check native balance for collateral plus gas. |
 | ERC20/TRC20 collateral deposit | Yes | Resolve collateral token/decimals from `get_supported_ilks`; resolve the protocol spender from official protocol config or existing proxy context before `approve_token`. |
-| `repay_usdd` / `close_vault` | Yes for USDD | The official service may auto-approve missing USDD to the proxy, but the agent still checks balance/allowance first when possible. |
+| `repay_usdd` / `close_vault` | Yes for USDD | Resolve USDD and USDD join from `get_protocol_addresses`. The official service may auto-approve missing USDD to the proxy, but the agent still checks balance/allowance first when possible. |
 | `open_vault`, `mint_usdd`, `withdraw_collateral` | No inbound token pull | Still require risk review and chat confirmation. |
 
 `approve_token` rejects spenders that are not official protocol contracts. If spender resolution is ambiguous, do not invent an address; fetch more protocol data or stop with the exact blocker.
@@ -84,7 +85,7 @@ Before any Vault write, run every step below in order. **NEVER skip** a safety c
 1. Confirm `network` and `ilk` with `get_supported_ilks({ network })`.
 2. Call `get_wallet_address({ network })`.
 3. Call `get_native_balance({ network })` for gas.
-4. For spend operations, call `get_token_balance` for the collateral token or USDD.
+4. For spend operations, resolve collateral from `get_supported_ilks` or USDD from `get_protocol_addresses({ network })`, then call `get_token_balance`.
 5. If allowance is needed, call `check_allowance`; if insufficient, include `approve_token` in the pending write sequence but do not execute it yet.
 6. Chat confirmation: restate action, `network`, active wallet, `ilk`, `cdpId` if any, collateral amount, draw/repay/withdraw amount, risk level, expected direction of risk change, and every pending write tool. If approval is needed, explicitly list both `approve_token` and the business write.
 7. Wait for a fresh affirmative confirmation from the user.

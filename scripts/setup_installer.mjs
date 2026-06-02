@@ -10,7 +10,15 @@ export const REPO_ROOT = path.resolve(__dirname, '..');
 
 export const JSON_CLIENTS = new Set(['project', 'claude-desktop', 'cursor', 'codex']);
 export const ALL_CLIENTS = ['project', 'claude-desktop', 'cursor', 'codex'];
-export const RPC_ENV_KEYS = ['TRONGRID_API_KEY', 'ETH_RPC_URL', 'BSC_RPC_URL'];
+export const RPC_ENV_KEYS = [
+  'TRONGRID_API_KEY',
+  'TRON_FULL_NODE',
+  'TRON_NILE_FULL_NODE',
+  'ETH_RPC_URL',
+  'ETH_SEPOLIA_RPC_URL',
+  'BSC_RPC_URL',
+  'BSC_TESTNET_RPC_URL',
+];
 export const DEFAULT_PACKAGE_SOURCE = 'git+https://github.com/decentralized-usd/usdd-skills.git';
 
 export function checkNodeVersion(version = process.versions.node) {

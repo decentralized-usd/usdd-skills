@@ -21,7 +21,7 @@ The official MCP exposes these tool groups:
 |---|---|
 | Wallet / network | `get_supported_networks`, `set_network`, `get_network`, `connect_browser_wallet`, `set_wallet_mode`, `get_wallet_mode`, `get_wallet_address`, `list_wallets`, `import_wallet`, `set_active_wallet` |
 | Common preflight | `get_native_balance`, `get_token_balance`, `check_allowance`, `approve_token` |
-| Protocol reads | `get_protocol_overview`, `get_supported_ilks`, `get_oracle_status`, `get_protocol_metrics`, `get_chain_metrics`, `get_collateral_prices` |
+| Protocol reads | `get_protocol_addresses`, `get_protocol_overview`, `get_supported_ilks`, `get_oracle_status`, `get_protocol_metrics`, `get_chain_metrics`, `get_collateral_prices` |
 | Vault | `get_user_vaults`, `get_vault_summary`, `analyze_vault_risk`, `open_vault`, `deposit_and_mint`, `mint_usdd`, `repay_usdd`, `withdraw_collateral`, `close_vault` |
 | PSM | `get_psm_status`, `get_psm_metrics`, `psm_swap_to_usdd`, `psm_swap_from_usdd` |
 | Savings | `get_savings_status`, `deposit_savings`, `withdraw_savings` |

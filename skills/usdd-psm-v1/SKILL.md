@@ -16,13 +16,13 @@ Official PSM tools require:
 - `network`: one of `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, `bsc_testnet`
 - `market`: a PSM market key such as `PSM-USDT`, `PSM-USDC`, or `PSM-USD1`
 
-If the user gives only a stable symbol such as "USDT", resolve it to a market by calling `get_protocol_overview({ network })` or `get_supported_ilks({ network })` and checking returned `psmMarkets`. If the user does not provide a network, ask before proceeding.
+If the user gives only a stable symbol such as "USDT", resolve it to a market by calling `get_protocol_addresses({ network })` or `get_supported_ilks({ network })` and checking returned `psmMarkets`. If the user does not provide a network, ask before proceeding.
 
 ## Available Tools
 
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
-| `get_protocol_overview` (official) | `network?` | Protocol addresses, configured ilks, and PSM markets | No |
+| `get_protocol_addresses` (official) | `network?` | Static protocol addresses, configured ilks, and PSM markets without RPC reads | No |
 | `get_supported_ilks` (official) | `network?` | Configured collateral types and PSM joins | No |
 | `get_psm_status` (official) | `market`, `network?` | PSM market config, buy/sell enablement, in/out fees | No |
 | `get_psm_metrics` (official) | `market`, `network?` | Route availability and route fees | No |
@@ -79,7 +79,7 @@ Before either PSM swap, run every step below in order. **NEVER skip** a safety c
 4. Call `get_psm_metrics({ market, network })` and show the route fee/availability if present.
 5. Resolve input token:
    - to USDD: market gem token and decimals from `get_psm_status().market`.
-   - from USDD: USDD token from `get_protocol_overview({ network }).addresses.usdd`.
+   - from USDD: USDD token from `get_protocol_addresses({ network }).addresses.usdd`.
 6. Resolve spender from the direction-specific spender table above.
 7. Call `get_native_balance({ network })` for gas.
 8. Call `get_token_balance` for the input token.
@@ -96,7 +96,7 @@ If the user refuses, gives an ambiguous reply, or repeats a request to bypass ch
 
 ## Example Prompts
 
-- "What PSM markets exist on BSC?" -> `get_protocol_overview({ network: "bsc" })`
+- "What PSM markets exist on BSC?" -> `get_protocol_addresses({ network: "bsc" })`
 - "What is the fee to swap USDT into USDD on TRON?" -> `get_psm_status({ market: "PSM-USDT", network: "tron" })`
 - "Swap 500 USDT to USDD on TRON." -> resolve `PSM-USDT`, full write precheck, `psm_swap_to_usdd`
 - "Buy 1000 USDC from USDD on Ethereum." -> resolve `PSM-USDC`, full write precheck, `psm_swap_from_usdd` with `amount="1000"`

@@ -22,8 +22,12 @@ test('buildMcpServers creates durable analytics and official MCP entries', () =>
   const servers = buildMcpServers({
     env: {
       TRONGRID_API_KEY: 'tron-key',
+      TRON_FULL_NODE: 'https://tron.example',
+      TRON_NILE_FULL_NODE: 'https://nile.example',
       ETH_RPC_URL: '',
       BSC_RPC_URL: 'https://bsc.example',
+      ETH_SEPOLIA_RPC_URL: 'https://sepolia.example',
+      BSC_TESTNET_RPC_URL: 'https://bsc-testnet.example',
     },
   });
   assert.deepEqual(servers['usdd-analytics'], {
@@ -35,7 +39,11 @@ test('buildMcpServers creates durable analytics and official MCP entries', () =>
     args: [],
     env: {
       TRONGRID_API_KEY: 'tron-key',
+      TRON_FULL_NODE: 'https://tron.example',
+      TRON_NILE_FULL_NODE: 'https://nile.example',
       BSC_RPC_URL: 'https://bsc.example',
+      ETH_SEPOLIA_RPC_URL: 'https://sepolia.example',
+      BSC_TESTNET_RPC_URL: 'https://bsc-testnet.example',
     },
   });
 });
