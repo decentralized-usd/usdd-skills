@@ -16,22 +16,26 @@ Official PSM tools require:
 - `network`: one of `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, `bsc_testnet`
 - `market`: a PSM market key such as `PSM-USDT`, `PSM-USDC`, or `PSM-USD1`
 
-If the user gives only a stable symbol such as "USDT", resolve it to a market by calling `get_protocol_addresses({ network })` or `get_supported_ilks({ network })` and checking returned `psmMarkets`. If the user does not provide a network, ask before proceeding.
+If a PSM request depends on a blockchain network and the user omitted it, the first response must ask which network. Do not call any MCP tool before the user names the network. Never default to TRON, `tron`, mainnet, testnet, `set_network`, `get_network`, or any configured default.
+
+If the user gives only a stable symbol such as "USDT", resolve it to a market by calling `get_protocol_addresses({ network })` or `get_supported_ilks({ network })` and checking returned `psmMarkets` only after the network is explicit.
+
+Regression case: for `Swap 500 USDT to USDD.`, ask which network to use, such as `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, or `bsc_testnet`; make no MCP tool call until the user answers with a network.
 
 ## Available Tools
 
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
-| `get_protocol_addresses` (official) | `network?` | Static protocol addresses, configured ilks, and PSM markets without RPC reads | No |
-| `get_supported_ilks` (official) | `network?` | Configured collateral types and PSM joins | No |
-| `get_psm_status` (official) | `market`, `network?` | PSM market config, buy/sell enablement, in/out fees | No |
-| `get_psm_metrics` (official) | `market`, `network?` | Route availability and route fees | No |
-| `get_native_balance` (official) | `owner?`, `network?` | Gas-token balance | No |
-| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network?` | Input token balance | No |
-| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network?` | Token allowance and sufficiency | No |
-| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network?` | Approve token spending for a protocol spender | Yes |
-| `psm_swap_to_usdd` (official) | `market`, `amount`, `network?` | Sell the market gem into USDD | Yes |
-| `psm_swap_from_usdd` (official) | `market`, `amount`, `network?` | Buy the market gem with USDD | Yes |
+| `get_protocol_addresses` (official) | `network` | Static protocol addresses, configured ilks, and PSM markets without RPC reads | No |
+| `get_supported_ilks` (official) | `network` | Configured collateral types and PSM joins | No |
+| `get_psm_status` (official) | `market`, `network` | PSM market config, buy/sell enablement, in/out fees | No |
+| `get_psm_metrics` (official) | `market`, `network` | Route availability and route fees | No |
+| `get_native_balance` (official) | `owner?`, `network` | Gas-token balance | No |
+| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network` | Input token balance | No |
+| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network` | Token allowance and sufficiency | No |
+| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network` | Approve token spending for a protocol spender | Yes |
+| `psm_swap_to_usdd` (official) | `market`, `amount`, `network` | Sell the market gem into USDD | Yes |
+| `psm_swap_from_usdd` (official) | `market`, `amount`, `network` | Buy the market gem with USDD | Yes |
 
 Official write tools use the active MCP wallet. They do not accept `from`; call `get_wallet_address({ network })` before confirmation.
 
@@ -59,7 +63,7 @@ Do not approve the PSM contract for `psm_swap_to_usdd` unless the official MCP o
 
 ### PSM Quote / Read
 
-1. Resolve `network`.
+1. Confirm `network`; if missing, ask which network and stop without tool calls.
 2. Resolve `market`.
 3. Call `get_psm_status({ market, network })`.
 4. Call `get_psm_metrics({ market, network })` when the user asks about routes, fee comparison, or availability.
@@ -71,7 +75,7 @@ The official tools expose enablement and route availability. They do not guarant
 
 Before either PSM swap, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
-1. Resolve `network` and `market`; verify the market exists.
+1. Confirm `network`; if missing, ask which network and stop without tool calls. Then resolve `market` and verify the market exists.
 2. Call `get_wallet_address({ network })`.
 3. Call `get_psm_status({ market, network })` and verify the relevant direction is enabled:
    - `psm_swap_to_usdd`: `sellEnabled` must be true.

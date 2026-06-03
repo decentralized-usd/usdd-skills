@@ -16,6 +16,12 @@ const addressLookupSkillFiles = [
   'skills/usdd-psm-v1/SKILL.md',
   'skills/usdd-earn-v1/SKILL.md',
 ];
+const explicitNetworkSkillFiles = [
+  'SKILL.md',
+  'skills/usdd-vault-v1/SKILL.md',
+  'skills/usdd-psm-v1/SKILL.md',
+  'skills/usdd-earn-v1/SKILL.md',
+];
 
 test('write-capable skills require non-skippable prechecks and fresh confirmation', async () => {
   for (const relativePath of writeSkillFiles) {
@@ -44,4 +50,32 @@ test('official write skills use RPC-independent protocol address lookup', async 
       `${relativePath} must use static protocol address lookup`
     );
   }
+});
+
+test('chain-dependent skills require explicit network before any tool call', async () => {
+  for (const relativePath of explicitNetworkSkillFiles) {
+    const skill = await fs.readFile(path.join(repoRoot, relativePath), 'utf8');
+    assert.match(
+      skill,
+      /first response must ask which network/i,
+      `${relativePath} must ask for network before doing chain-dependent work`
+    );
+    assert.match(
+      skill,
+      /Do not call any MCP tool before the user names the network/i,
+      `${relativePath} must forbid tool calls before network is explicit`
+    );
+    assert.match(
+      skill,
+      /Never default to TRON/i,
+      `${relativePath} must explicitly forbid defaulting to TRON`
+    );
+  }
+});
+
+test('PSM skill covers missing-network swap regression prompt', async () => {
+  const skill = await fs.readFile(path.join(repoRoot, 'skills/usdd-psm-v1/SKILL.md'), 'utf8');
+  assert.match(skill, /Swap 500 USDT to USDD\./);
+  assert.match(skill, /ask which network/i);
+  assert.match(skill, /no MCP tool/i);
 });

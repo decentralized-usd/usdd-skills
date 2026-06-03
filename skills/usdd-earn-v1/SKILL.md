@@ -14,21 +14,23 @@ Use the official MCP for current savings status and all writes. Use this repo's 
 
 Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc_testnet`, but Savings is only usable where `get_savings_status({ network })` returns `supported: true`.
 
+If an Earn request depends on a blockchain network and the user omitted it, the first response must ask which network. Do not call any MCP tool before the user names the network. Never default to TRON, `tron`, mainnet, testnet, `set_network`, `get_network`, or any configured default.
+
 Before any Earn write, call `get_savings_status({ network })`. If it returns `supported: false`, refuse the write and quote the returned message. Do not assume TRON Savings exists just because USDD exists on TRON.
 
 ## Available Tools
 
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
-| `get_savings_status` (official) | `network?` | Savings support, contract addresses, rate metrics, wallet shares | No |
-| `get_protocol_addresses` (official) | `network?` | Static USDD token and protocol addresses without RPC reads | No |
-| `get_wallet_address` (official) | `network?` | Active MCP wallet address | No |
-| `get_native_balance` (official) | `owner?`, `network?` | Gas-token balance | No |
-| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network?` | USDD / sUSDD balance | No |
-| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network?` | USDD allowance for sUSDD contract | No |
-| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network?` | Approve USDD for the sUSDD contract | Yes |
-| `deposit_savings` (official) | `amount`, `network?` | Deposit USDD and mint sUSDD shares | Yes |
-| `withdraw_savings` (official) | `amount`, `network?` | Withdraw USDD amount from sUSDD | Yes |
+| `get_savings_status` (official) | `network` | Savings support, contract addresses, rate metrics, wallet shares | No |
+| `get_protocol_addresses` (official) | `network` | Static USDD token and protocol addresses without RPC reads | No |
+| `get_wallet_address` (official) | `network` | Active MCP wallet address | No |
+| `get_native_balance` (official) | `owner?`, `network` | Gas-token balance | No |
+| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network` | USDD / sUSDD balance | No |
+| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network` | USDD allowance for sUSDD contract | No |
+| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network` | Approve USDD for the sUSDD contract | Yes |
+| `deposit_savings` (official) | `amount`, `network` | Deposit USDD and mint sUSDD shares | Yes |
+| `withdraw_savings` (official) | `amount`, `network` | Withdraw USDD amount from sUSDD | Yes |
 | `get_earn_apy` (local MCP) | — | Per-chain APY analytics via this repo's analytics MCP | No |
 | `get_susdd_supply` (local MCP) | — | sUSDD supply breakdown via this repo's analytics MCP | No |
 | `get_public_dsr_apy` (local MCP) | — | DSR APY current / average / history | No |
@@ -59,7 +61,7 @@ For current per-network wallet shares, sUSDD contract status, or current DSR fie
 
 Before `deposit_savings`, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
-1. Resolve `network`; ask if missing.
+1. Confirm `network`; if missing, ask which network and stop without tool calls.
 2. Call `get_savings_status({ network })`; stop if `supported: false`.
 3. Call `get_protocol_addresses({ network })` to get the USDD token address without an RPC read.
 4. Call `get_wallet_address({ network })`.
@@ -78,7 +80,7 @@ If the user refuses, gives an ambiguous reply, or repeats a request to bypass ch
 
 Before `withdraw_savings`, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
-1. Resolve `network`; ask if missing.
+1. Confirm `network`; if missing, ask which network and stop without tool calls.
 2. Call `get_savings_status({ network })`; stop if `supported: false`.
 3. Call `get_wallet_address({ network })`.
 4. Call `get_native_balance({ network })` for gas.

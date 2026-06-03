@@ -42,6 +42,14 @@ Official MCP tool arguments use `network`, not `chain`. If the user names a chai
 
 ## Global Rules
 
+### Explicit Network Gate
+
+For any user request that depends on a blockchain network, the first response must ask which network when the user omitted it. Do not call any MCP tool before the user names the network. Never default to TRON, `tron`, mainnet, testnet, `set_network`, `get_network`, or any configured default.
+
+This applies to all chain-dependent reads and writes, including wallet address, balances, allowances, protocol addresses, protocol overview, supported ilks, oracle status, PSM status/metrics, Vault reads/writes, Earn reads/writes, and token transfers.
+
+Regression case: for `Swap 500 USDT to USDD.`, ask which network to use, such as `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, or `bsc_testnet`; make no MCP tool call until the user answers with a network.
+
 ### Active Wallet
 
 Official write tools use the MCP server's active wallet. They do not accept a `from` argument. Before any write, call `get_wallet_address({ network })` and use the returned address in the user-facing confirmation.

@@ -14,6 +14,8 @@ This repo's local analytics MCP is read-only and does not provide per-ilk collat
 
 Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc_testnet`. Do not hard-code Vault support by chain. For every Vault workflow:
 
+If a Vault request depends on a blockchain network and the user omitted it, the first response must ask which network. Do not call any MCP tool before the user names the network. Never default to TRON, `tron`, mainnet, testnet, `set_network`, `get_network`, or any configured default.
+
 1. Resolve the user-facing chain to official MCP `network`.
 2. Call `get_supported_ilks({ network })`.
 3. Proceed only if the requested `ilk` appears in that network's returned ilks.
@@ -23,23 +25,23 @@ Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc
 
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
-| `get_protocol_addresses` (official) | `network?` | Static protocol addresses, ilks, and PSM markets without RPC reads | No |
-| `get_protocol_overview` (official) | `network?` | Live protocol ceilings and debt metrics | No |
-| `get_supported_ilks` (official) | `network?` | Configured collateral types and PSM joins for a network | No |
-| `get_oracle_status` (official) | `ilk`, `network?` | Liquidation ratio, penalty, oracle status for an ilk | No |
-| `get_user_vaults` (official) | `address?`, `network?` | Vault/CDP IDs owned by an address or active wallet proxy | No |
-| `get_vault_summary` (official) | `cdpId`, `network?` | Collateral, debt, debt ceiling/floor, health factor, risk level | No |
-| `analyze_vault_risk` (official) | `cdpId`, `network?` | Vault summary plus warnings | No |
-| `get_native_balance` (official) | `owner?`, `network?` | Gas-token balance | No |
-| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network?` | Collateral / USDD balance | No |
-| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network?` | ERC20/TRC20 allowance and sufficiency | No |
-| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network?` | Approve a protocol spender | Yes |
-| `open_vault` (official) | `ilk`, `network?` | Open or reuse a vault for an ilk | Yes |
-| `deposit_and_mint` (official) | `ilk`, `collateralAmount`, `drawAmount`, `cdpId?`, `transferFrom?`, `network?` | Deposit collateral and mint USDD | Yes |
-| `mint_usdd` (official) | `cdpId`, `amount`, `network?` | Draw additional USDD debt | Yes |
-| `repay_usdd` (official) | `cdpId`, `amount`, `network?` | Repay USDD debt | Yes |
-| `withdraw_collateral` (official) | `cdpId`, `ilk`, `amount`, `network?` | Withdraw collateral | Yes |
-| `close_vault` (official) | `cdpId`, `ilk`, `amountToFree`, `network?` | Repay all debt, then free collateral | Yes |
+| `get_protocol_addresses` (official) | `network` | Static protocol addresses, ilks, and PSM markets without RPC reads | No |
+| `get_protocol_overview` (official) | `network` | Live protocol ceilings and debt metrics | No |
+| `get_supported_ilks` (official) | `network` | Configured collateral types and PSM joins for a network | No |
+| `get_oracle_status` (official) | `ilk`, `network` | Liquidation ratio, penalty, oracle status for an ilk | No |
+| `get_user_vaults` (official) | `address?`, `network` | Vault/CDP IDs owned by an address or active wallet proxy | No |
+| `get_vault_summary` (official) | `cdpId`, `network` | Collateral, debt, debt ceiling/floor, health factor, risk level | No |
+| `analyze_vault_risk` (official) | `cdpId`, `network` | Vault summary plus warnings | No |
+| `get_native_balance` (official) | `owner?`, `network` | Gas-token balance | No |
+| `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network` | Collateral / USDD balance | No |
+| `check_allowance` (official) | `token`, `spender`, `owner?`, `amount?`, `decimals?`, `network` | ERC20/TRC20 allowance and sufficiency | No |
+| `approve_token` (official) | `token`, `spender`, `amount`, `decimals?`, `network` | Approve a protocol spender | Yes |
+| `open_vault` (official) | `ilk`, `network` | Open or reuse a vault for an ilk | Yes |
+| `deposit_and_mint` (official) | `ilk`, `collateralAmount`, `drawAmount`, `cdpId?`, `transferFrom?`, `network` | Deposit collateral and mint USDD | Yes |
+| `mint_usdd` (official) | `cdpId`, `amount`, `network` | Draw additional USDD debt | Yes |
+| `repay_usdd` (official) | `cdpId`, `amount`, `network` | Repay USDD debt | Yes |
+| `withdraw_collateral` (official) | `cdpId`, `ilk`, `amount`, `network` | Withdraw collateral | Yes |
+| `close_vault` (official) | `cdpId`, `ilk`, `amountToFree`, `network` | Repay all debt, then free collateral | Yes |
 
 Official write tools use the active MCP wallet. They do not accept `from`; call `get_wallet_address({ network })` before confirmation.
 
@@ -82,7 +84,7 @@ For `deposit_and_mint` on an existing vault, `mint_usdd`, `repay_usdd`, `withdra
 
 Before any Vault write, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
-1. Confirm `network` and `ilk` with `get_supported_ilks({ network })`.
+1. Confirm `network`; if missing, ask which network and stop without tool calls. Then confirm `ilk` with `get_supported_ilks({ network })`.
 2. Call `get_wallet_address({ network })`.
 3. Call `get_native_balance({ network })` for gas.
 4. For spend operations, resolve collateral from `get_supported_ilks` or USDD from `get_protocol_addresses({ network })`, then call `get_token_balance`.
