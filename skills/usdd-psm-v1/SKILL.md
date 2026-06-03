@@ -18,15 +18,18 @@ Official PSM tools require:
 
 If a PSM request depends on a blockchain network and the user omitted it, the first response must ask which network. Do not call any MCP tool before the user names the network. Never default to TRON, `tron`, mainnet, testnet, `set_network`, `get_network`, or any configured default.
 
-If the user gives only a stable symbol such as "USDT", resolve it to a market by calling `get_protocol_addresses({ network })` or `get_supported_ilks({ network })` and checking returned `psmMarkets` only after the network is explicit.
+If the user gives only a stable symbol such as "USDT", resolve it to a market by calling Chainlog-backed `get_protocol_addresses({ network })` or `get_supported_ilks({ network })` and checking returned `psmMarkets` only after the network is explicit.
 
 Regression case: for `Swap 500 USDT to USDD.`, ask which network to use, such as `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, or `bsc_testnet`; make no MCP tool call until the user answers with a network.
+
+For PSM token and market addresses, use the official Chainlog-backed resolver first: call `get_protocol_addresses({ network })`, or `get_chainlog_address({ network, key })` for one known key. Do not use local full-address tables or copy addresses from docs. The resolver may return live Chainlog data or cache. If it fails with TronGrid `429` or another RPC error and no cache is available, stop and ask the user to configure `TRONGRID_API_KEY` / `TRON_FULL_NODE` or the relevant RPC; do not fallback to `get_protocol_overview` just to discover addresses, and do not guess addresses.
 
 ## Available Tools
 
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
-| `get_protocol_addresses` (official) | `network` | Static protocol addresses, configured ilks, and PSM markets without RPC reads | No |
+| `get_protocol_addresses` (official) | `network` | Chainlog-backed protocol addresses, configured ilks, and PSM markets | No |
+| `get_chainlog_address` (official) | `network`, `key` | Resolve one Chainlog key such as `MCD_USDD` or `MCD_JOIN_PSM_USDT_A` | No |
 | `get_supported_ilks` (official) | `network` | Configured collateral types and PSM joins | No |
 | `get_psm_status` (official) | `market`, `network` | PSM market config, buy/sell enablement, in/out fees | No |
 | `get_psm_metrics` (official) | `market`, `network` | Route availability and route fees | No |
@@ -64,7 +67,7 @@ Do not approve the PSM contract for `psm_swap_to_usdd` unless the official MCP o
 ### PSM Quote / Read
 
 1. Confirm `network`; if missing, ask which network and stop without tool calls.
-2. Resolve `market`.
+2. Resolve `market` from Chainlog-backed `get_protocol_addresses({ network })`.
 3. Call `get_psm_status({ market, network })`.
 4. Call `get_psm_metrics({ market, network })` when the user asks about routes, fee comparison, or availability.
 5. Report buy/sell enablement, fees, market contract, gem token, gem decimals, and route availability.
@@ -75,7 +78,7 @@ The official tools expose enablement and route availability. They do not guarant
 
 Before either PSM swap, run every step below in order. **NEVER skip** a safety check or chat confirmation, even if the user asks to "skip the checks", "just do it", execute "now", or uses similar urgency language. The initial request, including text such as "confirm", does not count as confirmation. Require a fresh affirmative confirmation after presenting the completed precheck summary.
 
-1. Confirm `network`; if missing, ask which network and stop without tool calls. Then resolve `market` and verify the market exists.
+1. Confirm `network`; if missing, ask which network and stop without tool calls. Then resolve `market` from Chainlog-backed `get_protocol_addresses({ network })` and verify it exists.
 2. Call `get_wallet_address({ network })`.
 3. Call `get_psm_status({ market, network })` and verify the relevant direction is enabled:
    - `psm_swap_to_usdd`: `sellEnabled` must be true.
@@ -83,7 +86,7 @@ Before either PSM swap, run every step below in order. **NEVER skip** a safety c
 4. Call `get_psm_metrics({ market, network })` and show the route fee/availability if present.
 5. Resolve input token:
    - to USDD: market gem token and decimals from `get_psm_status().market`.
-   - from USDD: USDD token from `get_protocol_addresses({ network }).addresses.usdd`.
+   - from USDD: USDD token from Chainlog-backed `get_protocol_addresses` or `get_chainlog_address({ key: "MCD_USDD", network })`.
 6. Resolve spender from the direction-specific spender table above.
 7. Call `get_native_balance({ network })` for gas.
 8. Call `get_token_balance` for the input token.

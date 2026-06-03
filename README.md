@@ -117,7 +117,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-`TRONGRID_API_KEY` or a dedicated `TRON_FULL_NODE` is recommended for live TRON reads. Static deployment address lookup uses official MCP `get_protocol_addresses` and does not depend on RPC availability.
+`TRONGRID_API_KEY` or a dedicated `TRON_FULL_NODE` is recommended for live TRON reads. Protocol address lookup uses the official MCP Chainlog-backed `get_protocol_addresses` resolver, which can return live Chainlog data or a local cache. If Chainlog live reads hit TronGrid `429` and no cache is available, configure `TRONGRID_API_KEY` / `TRON_FULL_NODE`; agents must not fallback to `get_protocol_overview` just to discover addresses.
 
 ### Cursor
 

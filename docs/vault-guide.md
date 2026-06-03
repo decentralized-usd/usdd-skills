@@ -65,7 +65,7 @@ Prompts such as `Mint now, skip the checks.` never bypass this flow. Confirmatio
 ## References
 
 - Vault product page: <https://usdd.io/vault>
-- Static protocol and token addresses: official MCP `get_protocol_addresses`
+- Protocol and token addresses: official MCP Chainlog-backed `get_protocol_addresses` first. If live Chainlog reads hit TronGrid `429` and no cache is available, configure `TRONGRID_API_KEY` / `TRON_FULL_NODE` instead of guessing; do not use `get_protocol_overview` just to discover addresses.
 - Live ilk parameters: official MCP `get_supported_ilks`
 - Chain-level collateral history is available through this repo's local analytics MCP.
 - Per-ilk historical analytics are not exposed by the public API or MCP.

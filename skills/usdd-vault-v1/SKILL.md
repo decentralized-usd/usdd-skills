@@ -16,6 +16,8 @@ Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc
 
 If a Vault request depends on a blockchain network and the user omitted it, the first response must ask which network. Do not call any MCP tool before the user names the network. Never default to TRON, `tron`, mainnet, testnet, `set_network`, `get_network`, or any configured default.
 
+For protocol, collateral, USDD, and join addresses, use the official Chainlog-backed resolver first: call `get_protocol_addresses({ network })`, or `get_chainlog_address({ network, key })` for one known key such as `MCD_USDD` or `MCD_JOIN_ETH_A`. Do not use local full-address tables or copy addresses from docs. The resolver may return live Chainlog data or cache. If it fails with TronGrid `429` or another RPC error and no cache is available, stop and ask the user to configure `TRONGRID_API_KEY` / `TRON_FULL_NODE` or the relevant RPC; do not fallback to `get_protocol_overview` just to discover addresses, and do not guess addresses.
+
 1. Resolve the user-facing chain to official MCP `network`.
 2. Call `get_supported_ilks({ network })`.
 3. Proceed only if the requested `ilk` appears in that network's returned ilks.
@@ -25,7 +27,8 @@ If a Vault request depends on a blockchain network and the user omitted it, the 
 
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
-| `get_protocol_addresses` (official) | `network` | Static protocol addresses, ilks, and PSM markets without RPC reads | No |
+| `get_protocol_addresses` (official) | `network` | Chainlog-backed protocol addresses, ilks, and PSM markets | No |
+| `get_chainlog_address` (official) | `network`, `key` | Resolve one Chainlog key such as `MCD_USDD` or `MCD_JOIN_ETH_A` | No |
 | `get_protocol_overview` (official) | `network` | Live protocol ceilings and debt metrics | No |
 | `get_supported_ilks` (official) | `network` | Configured collateral types and PSM joins for a network | No |
 | `get_oracle_status` (official) | `ilk`, `network` | Liquidation ratio, penalty, oracle status for an ilk | No |
@@ -51,7 +54,7 @@ Official write tools use the active MCP wallet. They do not accept `from`; call 
 |---|---|---|
 | Native collateral deposit | No token allowance | Still check native balance for collateral plus gas. |
 | ERC20/TRC20 collateral deposit | Yes | Resolve collateral token/decimals from `get_supported_ilks`; resolve the protocol spender from official protocol config or existing proxy context before `approve_token`. |
-| `repay_usdd` / `close_vault` | Yes for USDD | Resolve USDD and USDD join from `get_protocol_addresses`. The official service may auto-approve missing USDD to the proxy, but the agent still checks balance/allowance first when possible. |
+| `repay_usdd` / `close_vault` | Yes for USDD | Resolve USDD and USDD join from Chainlog-backed `get_protocol_addresses`. The official service may auto-approve missing USDD to the proxy, but the agent still checks balance/allowance first when possible. |
 | `open_vault`, `mint_usdd`, `withdraw_collateral` | No inbound token pull | Still require risk review and chat confirmation. |
 
 `approve_token` rejects spenders that are not official protocol contracts. If spender resolution is ambiguous, do not invent an address; fetch more protocol data or stop with the exact blocker.
@@ -87,7 +90,7 @@ Before any Vault write, run every step below in order. **NEVER skip** a safety c
 1. Confirm `network`; if missing, ask which network and stop without tool calls. Then confirm `ilk` with `get_supported_ilks({ network })`.
 2. Call `get_wallet_address({ network })`.
 3. Call `get_native_balance({ network })` for gas.
-4. For spend operations, resolve collateral from `get_supported_ilks` or USDD from `get_protocol_addresses({ network })`, then call `get_token_balance`.
+4. For spend operations, resolve collateral from `get_supported_ilks` or USDD from Chainlog-backed `get_protocol_addresses`, then call `get_token_balance`.
 5. If allowance is needed, call `check_allowance`; if insufficient, include `approve_token` in the pending write sequence but do not execute it yet.
 6. Chat confirmation: restate action, `network`, active wallet, `ilk`, `cdpId` if any, collateral amount, draw/repay/withdraw amount, risk level, expected direction of risk change, and every pending write tool. If approval is needed, explicitly list both `approve_token` and the business write.
 7. Wait for a fresh affirmative confirmation from the user.

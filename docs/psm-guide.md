@@ -29,7 +29,7 @@ Use `get_psm_status` from the official MCP to read the current parameters per ch
 ## Swap flow (USDD → stable)
 
 1. Hold USDD on the target chain.
-2. Resolve the USDD address with official MCP `get_protocol_addresses`, then read route status, fee, active wallet, gas balance, USDD balance, and allowance.
+2. Resolve the USDD address with official MCP Chainlog-backed `get_protocol_addresses` first. If live Chainlog reads hit TronGrid `429` and no cache is available, stop and configure `TRONGRID_API_KEY` / `TRON_FULL_NODE` instead of guessing.
 3. Resolve the PSM contract as the USDD spender.
 4. Show a chat-confirmation summary listing `approve_token` if allowance is insufficient and the pending `psm_swap_from_usdd` action.
 5. Wait for a fresh affirmative confirmation from the user.
@@ -53,5 +53,5 @@ Each direction has a cap. If you ask to swap more than the remaining capacity, t
 ## References
 
 - PSM product page: <https://usdd.io/psm>
-- Static market and token addresses: official MCP `get_protocol_addresses`
+- Market and token addresses: official MCP Chainlog-backed `get_protocol_addresses` first; do not use `get_protocol_overview` just to discover addresses.
 - Live PSM metrics: official MCP `get_psm_status` and `get_psm_metrics`

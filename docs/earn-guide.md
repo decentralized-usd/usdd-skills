@@ -16,7 +16,7 @@ The savings rate and APY can differ per chain. Use `get_earn_apy` (this repo's M
 ## Deposit flow
 
 1. Hold USDD on the target chain.
-2. Resolve the USDD address with official MCP `get_protocol_addresses`, then read Savings support, active wallet, gas balance, USDD balance, and allowance.
+2. Resolve the USDD address with official MCP Chainlog-backed `get_protocol_addresses` first. If live Chainlog reads hit TronGrid `429` and no cache is available, stop and configure `TRONGRID_API_KEY` / `TRON_FULL_NODE` instead of guessing.
 3. Show a chat-confirmation summary listing `approve_token` if allowance is insufficient and the pending `deposit_savings` action.
 4. Wait for a fresh affirmative confirmation from the user.
 5. Only then call `approve_token` if needed, wait for its receipt, and call `deposit_savings({ amount, network })`.
@@ -51,4 +51,4 @@ Use `get_earn_apy` (this repo's MCP, `openapi.usdd.io /api/v1/external/earn-apy`
 ## References
 
 - Earn product page: <https://usdd.io/earn>
-- Smart contract addresses: see official MCP `get_protocol_addresses` output
+- Smart contract addresses: see official MCP Chainlog-backed `get_protocol_addresses` output first; do not use `get_protocol_overview` just to discover addresses.

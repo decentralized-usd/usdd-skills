@@ -41,13 +41,18 @@ test('write-capable skills require non-skippable prechecks and fresh confirmatio
   }
 });
 
-test('official write skills use RPC-independent protocol address lookup', async () => {
+test('official write skills use Chainlog-backed protocol address lookup', async () => {
   for (const relativePath of addressLookupSkillFiles) {
     const skill = await fs.readFile(path.join(repoRoot, relativePath), 'utf8');
     assert.match(
       skill,
-      /get_protocol_addresses/,
-      `${relativePath} must use static protocol address lookup`
+      /Chainlog-backed `get_protocol_addresses`/i,
+      `${relativePath} must use Chainlog-backed protocol address lookup`
+    );
+    assert.match(
+      skill,
+      /get_chainlog_address/,
+      `${relativePath} must mention single-key Chainlog resolution`
     );
   }
 });
@@ -78,4 +83,30 @@ test('PSM skill covers missing-network swap regression prompt', async () => {
   assert.match(skill, /Swap 500 USDT to USDD\./);
   assert.match(skill, /ask which network/i);
   assert.match(skill, /no MCP tool/i);
+});
+
+test('protocol address resolution forbids static tables and overview fallback', async () => {
+  for (const relativePath of explicitNetworkSkillFiles) {
+    const skill = await fs.readFile(path.join(repoRoot, relativePath), 'utf8');
+    assert.match(
+      skill,
+      /Chainlog-backed resolver first/i,
+      `${relativePath} must prefer Chainlog-backed resolver`
+    );
+    assert.match(
+      skill,
+      /Do not fallback to `get_protocol_overview` just to discover addresses/i,
+      `${relativePath} must forbid overview fallback for address discovery`
+    );
+    assert.match(
+      skill,
+      /Do not use local full-address tables/i,
+      `${relativePath} must forbid local full-address tables`
+    );
+    assert.match(
+      skill,
+      /TronGrid `429`/,
+      `${relativePath} must describe the TronGrid 429 stop condition`
+    );
+  }
 });

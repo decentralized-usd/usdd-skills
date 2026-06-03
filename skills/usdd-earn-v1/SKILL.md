@@ -16,6 +16,8 @@ Official MCP supports `tron`, `eth`, `bsc`, `tron_nile`, `eth_sepolia`, and `bsc
 
 If an Earn request depends on a blockchain network and the user omitted it, the first response must ask which network. Do not call any MCP tool before the user names the network. Never default to TRON, `tron`, mainnet, testnet, `set_network`, `get_network`, or any configured default.
 
+For USDD and Savings addresses, use the official Chainlog-backed resolver first: call `get_protocol_addresses({ network })`, or `get_chainlog_address({ network, key })` for one known key such as `MCD_USDD` or `SUSDD`. Do not use local full-address tables or copy addresses from docs. The resolver may return live Chainlog data or cache. If it fails with TronGrid `429` or another RPC error and no cache is available, stop and ask the user to configure `TRONGRID_API_KEY` / `TRON_FULL_NODE` or the relevant RPC; do not fallback to `get_protocol_overview` just to discover addresses, and do not guess addresses.
+
 Before any Earn write, call `get_savings_status({ network })`. If it returns `supported: false`, refuse the write and quote the returned message. Do not assume TRON Savings exists just because USDD exists on TRON.
 
 ## Available Tools
@@ -23,7 +25,8 @@ Before any Earn write, call `get_savings_status({ network })`. If it returns `su
 | Tool | Inputs | Description | Write? |
 |------|--------|-------------|--------|
 | `get_savings_status` (official) | `network` | Savings support, contract addresses, rate metrics, wallet shares | No |
-| `get_protocol_addresses` (official) | `network` | Static USDD token and protocol addresses without RPC reads | No |
+| `get_protocol_addresses` (official) | `network` | Chainlog-backed USDD token and protocol addresses | No |
+| `get_chainlog_address` (official) | `network`, `key` | Resolve one Chainlog key such as `MCD_USDD` or `SUSDD` | No |
 | `get_wallet_address` (official) | `network` | Active MCP wallet address | No |
 | `get_native_balance` (official) | `owner?`, `network` | Gas-token balance | No |
 | `get_token_balance` (official) | `token`, `owner?`, `decimals?`, `network` | USDD / sUSDD balance | No |
@@ -42,7 +45,7 @@ Official write tools use the active MCP wallet. They do not accept `from`; call 
 
 | Operation | Token approval needed? | Notes |
 |---|---|---|
-| `deposit_savings` | Yes, USDD -> sUSDD contract | Use USDD address from `get_protocol_addresses` and sUSDD address from `get_savings_status().savings.susdd`. |
+| `deposit_savings` | Yes, USDD -> sUSDD contract | Use USDD address from Chainlog-backed `get_protocol_addresses` and sUSDD address from `get_savings_status().savings.susdd`. |
 | `withdraw_savings` | No allowance | The user spends/burns sUSDD shares via the sUSDD contract. Still requires chat confirmation because it is a write. |
 
 ## Workflow Rules
@@ -63,7 +66,7 @@ Before `deposit_savings`, run every step below in order. **NEVER skip** a safety
 
 1. Confirm `network`; if missing, ask which network and stop without tool calls.
 2. Call `get_savings_status({ network })`; stop if `supported: false`.
-3. Call `get_protocol_addresses({ network })` to get the USDD token address without an RPC read.
+3. Resolve USDD from Chainlog-backed `get_protocol_addresses({ network })` or `get_chainlog_address({ key: "MCD_USDD", network })`.
 4. Call `get_wallet_address({ network })`.
 5. Call `get_native_balance({ network })` for gas.
 6. Call `get_token_balance({ token: usdd, network })`.
