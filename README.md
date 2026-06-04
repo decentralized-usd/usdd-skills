@@ -1,93 +1,187 @@
-# usdd-skills
+# USDD Skills
 
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Networks: TRON · ETH · BSC](https://img.shields.io/badge/Networks-TRON_·_ETH_·_BSC-red)
+![MCP](https://img.shields.io/badge/MCP-Compatible-blue)
 
+AI Agent skills for the [USDD](https://usdd.io) stablecoin protocol. Provides structured instructions and a local analytics MCP server that enables AI agents (Claude Code, Claude Desktop, Cursor, Codex, OpenCode) to query the public read-only USDD API, and — via the official `@usdd/mcp-server-usdd` package — open vaults, swap on PSM, and deposit into Earn.
 
-## Getting started
+## Features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **Vault (CDP)** — open, deposit, mint, repay, withdraw, close — with built-in risk-summary precheck and projected-ratio chat confirmation.
+- **PSM** — swap stablecoins ↔ USDD at fixed rate, no slippage, explicit fees in chat confirmation.
+- **Earn (Savings)** — deposit USDD to receive sUSDD; redeem back at the current rate.
+- **Analytics** — public read-only USDD API data: supply, APY, collateral, Vault configuration, per-chain history, and Smart Allocator detail.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Architecture
 
-## Add your files
+Two MCP servers, non-overlapping:
 
-* [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+| Server | Source | Role |
+|---|---|---|
+| Analytics MCP (this repo) | `scripts/mcp_server.mjs` | 14 read-only MCP tools backed by the public USDD API |
+| Official MCP | npm `@usdd/mcp-server-usdd` | Wallet, Vault/PSM/Earn reads & writes, protocol metrics, treasury, Smart Allocator |
 
+Skills route automatically. Write operations always go through the official MCP.
+
+## Supported Networks
+
+- TRON mainnet / Nile testnet: `tron`, `tron_nile`
+- Ethereum mainnet / Sepolia testnet: `eth`, `eth_sepolia`
+- BSC mainnet / BSC testnet: `bsc`, `bsc_testnet`
+
+## Quick Start
+
+### Recommended: one-command setup
+
+```bash
+npx --yes \
+  --package=git+https://github.com/decentralized-usd/usdd-skills.git \
+  usdd-skills setup --yes
 ```
-cd existing_repo
-git remote add origin https://g.teches.link/usdd/usdd-skills.git
-git branch -M main
-git push -uf origin main
+
+The setup command installs the durable `usdd-skills` and `mcp-server-usdd` binaries, writes MCP client config with backups, creates the skills symlink, and configures these MCP servers:
+
+- `usdd-analytics` -> `usdd-skills mcp-server`
+- `usdd-full` -> `mcp-server-usdd`
+
+The GitHub repository is published after internal release checks pass. Before the public release, internal testers should run `bash install.sh` from an existing local checkout.
+
+If `@usdd/usdd-skills` is published to npm later, the shorter equivalent command will be:
+
+```bash
+npx @usdd/usdd-skills setup --yes
 ```
 
-## Integrate with your tools
+To choose clients explicitly:
 
-* [Set up project integrations](https://g.teches.link/usdd/usdd-skills/-/settings/integrations)
+```bash
+usdd-skills setup --client claude-desktop,cursor,codex --yes
+```
 
-## Collaborate with your team
+### Local checkout setup
 
-* [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+```bash
+git clone https://github.com/decentralized-usd/usdd-skills.git
+cd usdd-skills
+bash install.sh
+```
 
-## Test and Deploy
+`install.sh` uses the current checkout as the analytics MCP source and configures detected clients. The generated project `.mcp.json` is ignored by Git and uses `node` with a relative script path. User-level client configs use absolute local paths so desktop applications do not depend on shell `PATH`.
 
-Use the built-in continuous integration in GitLab.
+The tracked `.mcp.json.example` is the portable project template. It intentionally contains no local paths or RPC values.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Verify
 
-***
+**Analytics MCP smoke:**
+```bash
+usdd-skills list-tools         # List the 14 analytics tools
+node scripts/usdd_api.mjs      # CLI usage from a local checkout
+```
 
-# Editing this README
+**Unit tests:**
+```bash
+npm test
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## Client Configuration
 
-## Suggestions for a good README
+### Project-local config
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+The setup command generates an ignored `.mcp.json` for the current checkout. Use the tracked `.mcp.json.example` as the portable template and do not commit the generated file.
 
-## Name
-Choose a self-explaining name for your project.
+### Claude Desktop
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```json
+{
+  "mcpServers": {
+    "usdd-analytics": {
+      "command": "usdd-skills",
+      "args": ["mcp-server"]
+    },
+    "usdd-full": {
+      "command": "mcp-server-usdd",
+      "env": {
+        "TRONGRID_API_KEY": "your_key_optional",
+        "TRON_FULL_NODE": "your_tron_url_optional",
+        "TRON_NILE_FULL_NODE": "your_nile_url_optional",
+        "ETH_RPC_URL": "your_url_optional",
+        "ETH_SEPOLIA_RPC_URL": "your_sepolia_url_optional",
+        "BSC_RPC_URL": "your_url_optional",
+        "BSC_TESTNET_RPC_URL": "your_bsc_testnet_url_optional"
+      }
+    }
+  }
+}
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+`TRONGRID_API_KEY` or a dedicated `TRON_FULL_NODE` is recommended for live TRON reads. Protocol address lookup uses the official MCP Chainlog-backed `get_protocol_addresses` resolver, which can return live Chainlog data or a local cache. If Chainlog live reads hit TronGrid `429` and no cache is available, configure `TRONGRID_API_KEY` / `TRON_FULL_NODE`; agents must not fallback to `get_protocol_overview` just to discover addresses.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Cursor
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Add to `.cursor/mcp.json` — same structure as above.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Claude Code
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Register project-scoped MCP servers:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+```bash
+claude mcp add -s project usdd-analytics -- usdd-skills mcp-server
+claude mcp add -s project usdd-full -- mcp-server-usdd
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+### OpenCode / Codex CLI
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+See `.codex/INSTALL.md`.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## Available Tools (this repo's analytics MCP)
+
+| Tool | Description |
+|------|-------------|
+| `get_earn_apy` | USDD Savings APY per chain |
+| `get_usdd_supply` | USDD supply per chain |
+| `get_susdd_supply` | sUSDD supply per chain |
+| `get_supply_history` | Time series of USDD and sUSDD supply per chain |
+| `get_collateral_history` | Time series of total collateral value per chain |
+| `get_circulating_supply` | Raw circulating supply |
+| `get_total_supply` | Raw total supply |
+| `get_public_protocol_overview` | Public REST protocol overview |
+| `get_public_protocol_overview_info` | Public REST protocol overview with 24h changes |
+| `get_public_dsr_apy` | DSR APY current / average / history |
+| `get_vault_collaterals` | Vault collateral configuration list |
+| `get_latest_collateral` | Per-chain collateral snapshot |
+| `get_chain_collateral_history` | Per-chain historical series for chart intervals |
+| `get_smart_allocator_detail` | Smart Allocator detail overview |
+
+There is still no per-ilk historical tool named `get_ilk_collateral_history`. The public `collateral-history` endpoint is keyed by `chain` and `interval`, not by `ilk`.
+
+For Vault / PSM / Earn / balance / allowance / protocol-overview / treasury / Smart Allocator tools, see the official MCP: <https://github.com/decentralized-usd/mcp-server-usdd>.
+
+## Example Conversations
+
+- **"Which chain has the highest USDD Earn APY today?"**
+  → analytics MCP `get_earn_apy` → AI compares TRON / ETH / BSC
+
+- **"Deposit 1000 USDD on Ethereum into Earn."**
+  → official MCP balance / allowance checks → chat confirmation listing `approve_token` if needed and `deposit_savings` → fresh user confirmation → execute pending writes
+
+- **"What's my vault #42 health?"**
+  → official MCP `analyze_vault_risk` → 3-line risk summary (ratio / liquidation price / tier)
+
+- **"What's the protocol supply right now?"**
+  → official MCP `get_protocol_metrics`, or analytics MCP `get_total_supply` when a raw total-supply number is sufficient
+
+## Security
+
+- This repo's MCP is **read-only**. No transaction signing, no private keys.
+- Writes are delegated to `@usdd/mcp-server-usdd`, which manages wallets and chain RPCs in its own env.
+- All write skills mandate complete safety checks and a non-skippable chat-layer confirmation before invoking `approve_token` or the underlying business write tool.
+- Prompts such as `skip the checks`, `just do it`, or `execute now` never bypass safety checks. Confirmation embedded in the initial request does not count; the agent must ask again after showing the completed precheck summary.
+- Vault writes additionally mandate a risk-summary precheck (collateral ratio / liquidation price / risk tier).
+- Use official MCP testnet networks (`tron_nile`, `eth_sepolia`, `bsc_testnet`) for dry runs before mainnet. This repo's analytics MCP does not use `NETWORK`.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+MIT License · Copyright (c) 2026 USDD

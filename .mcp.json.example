@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "usdd-analytics": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./scripts/mcp_server.mjs"
+      ],
+      "env": {}
+    },
+    "usdd-full": {
+      "type": "stdio",
+      "command": "mcp-server-usdd",
+      "args": [],
+      "env": {}
+    }
+  }
+}

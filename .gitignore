@@ -1,0 +1,9 @@
+node_modules/
+.env
+.mcp.json
+.mcp.json.bak-*
+.mcp.json.tmp
+.DS_Store
+*.log
+.vscode/
+.idea/

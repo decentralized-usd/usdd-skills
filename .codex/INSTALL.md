@@ -1,0 +1,97 @@
+# Installing USDD Skills for Codex CLI
+
+## Prerequisites
+
+- Node.js v20+
+- Git
+- `npx` or npm v10+
+
+## Installation
+
+### Recommended
+
+```bash
+npx --yes \
+  --package=git+https://github.com/decentralized-usd/usdd-skills.git \
+  usdd-skills setup --client codex --yes
+```
+
+The setup command installs durable `usdd-skills` and `mcp-server-usdd` binaries, writes Codex MCP config with a timestamped backup, and creates the skills symlink.
+
+Before the public GitHub release, internal testers should run `bash install.sh` from an existing local checkout. If `@usdd/usdd-skills` is published to npm later, the shorter equivalent command will be `npx @usdd/usdd-skills setup --client codex --yes`.
+
+Local checkout setup generates an ignored `.mcp.json` with `node` and a relative analytics script path. The tracked `.mcp.json.example` is the portable template; do not commit the generated project config. User-level Codex config continues to use absolute local paths.
+
+### Manual/local checkout
+
+1. **Clone this repo:**
+
+   ```bash
+   git clone https://github.com/decentralized-usd/usdd-skills.git ~/.codex/usdd-skills
+   cd ~/.codex/usdd-skills
+   bash install.sh
+   ```
+
+2. **Manual config shape if you do not use `install.sh`:**
+
+   ```jsonc
+   {
+     "mcpServers": {
+       "usdd-analytics": {
+         "command": "usdd-skills",
+         "args": ["mcp-server"]
+       },
+       "usdd-full": {
+         "command": "mcp-server-usdd",
+         "env": {
+           "TRONGRID_API_KEY": "<your key, optional>",
+           "TRON_FULL_NODE":   "<your TRON mainnet URL, optional>",
+           "TRON_NILE_FULL_NODE": "<your Nile URL, optional>",
+           "ETH_RPC_URL":      "<your Ethereum mainnet URL, optional>",
+           "ETH_SEPOLIA_RPC_URL": "<your Sepolia URL, optional>",
+           "BSC_RPC_URL":      "<your BSC mainnet URL, optional>",
+           "BSC_TESTNET_RPC_URL": "<your BSC testnet URL, optional>"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Restart Codex** to discover the skills.
+
+## Verify
+
+```bash
+ls ~/.agents/skills/usdd-skills
+# Should list: usdd-vault-v1/ usdd-psm-v1/ usdd-earn-v1/ usdd-analytics-v1/
+
+usdd-skills list-tools
+# Should print 14 analytics tools
+```
+
+For live TRON reads, configure `TRONGRID_API_KEY` or a dedicated `TRON_FULL_NODE`. Static deployment address lookup uses official MCP `get_protocol_addresses` and does not depend on RPC availability.
+
+## Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `usdd-vault-v1` | Open vaults, mint USDD, repay, withdraw, close. Requires official MCP. |
+| `usdd-psm-v1` | Swap stablecoins ↔ USDD via PSM. Requires official MCP. |
+| `usdd-earn-v1` | Deposit USDD to Earn, redeem sUSDD. Requires official MCP. |
+| `usdd-analytics-v1` | Public read-only USDD API analytics. Uses this repo's local MCP only. |
+
+## Updating
+
+```bash
+usdd-skills setup --client codex --yes
+```
+
+The setup command updates the GitHub-installed `usdd-skills` package and the npm-published official MCP. For a local checkout, run `cd ~/.codex/usdd-skills && git pull && bash install.sh`.
+
+## Uninstalling
+
+```bash
+rm ~/.agents/skills/usdd-skills
+rm -rf ~/.codex/usdd-skills
+npm uninstall -g @usdd/usdd-skills @usdd/mcp-server-usdd
+```

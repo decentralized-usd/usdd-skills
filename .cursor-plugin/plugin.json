@@ -1,0 +1,13 @@
+{
+  "name": "usdd-skills",
+  "description": "AI Agent skills for USDD — vault, PSM, savings, analytics on TRON / ETH / BSC.",
+  "version": "1.0.0",
+  "author": "USDD",
+  "repository": "https://github.com/decentralized-usd/usdd-skills",
+  "license": "MIT",
+  "keywords": [
+    "usdd", "tron", "ethereum", "bsc", "defi", "stablecoin",
+    "vault", "psm", "savings", "analytics"
+  ],
+  "skills": ["./skills/"]
+}
