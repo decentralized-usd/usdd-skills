@@ -35,9 +35,7 @@ Skills route automatically. Write operations always go through the official MCP.
 ### Recommended: one-command setup
 
 ```bash
-npx --yes \
-  --package=git+https://github.com/decentralized-usd/usdd-skills.git \
-  usdd-skills setup --yes
+npx @usdd/usdd-skills setup --yes
 ```
 
 The setup command installs the durable `usdd-skills` and `mcp-server-usdd` binaries, writes MCP client config with backups, creates the skills symlink, and configures these MCP servers:
@@ -45,12 +43,12 @@ The setup command installs the durable `usdd-skills` and `mcp-server-usdd` binar
 - `usdd-analytics` -> `usdd-skills mcp-server`
 - `usdd-full` -> `mcp-server-usdd`
 
-The GitHub repository is published after internal release checks pass. Before the public release, internal testers should run `bash install.sh` from an existing local checkout.
-
-If `@usdd/usdd-skills` is published to npm later, the shorter equivalent command will be:
+To install straight from GitHub without npm:
 
 ```bash
-npx @usdd/usdd-skills setup --yes
+npx --yes \
+  --package=git+https://github.com/decentralized-usd/usdd-skills.git \
+  usdd-skills setup --yes
 ```
 
 To choose clients explicitly:

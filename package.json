@@ -7,6 +7,9 @@
   "bin": {
     "usdd-skills": "bin/usdd-skills.mjs"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "bin/",
     "scripts/",
